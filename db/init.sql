@@ -1,0 +1,33 @@
+CREATE TABLE IF NOT EXISTS users(
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(100),
+  email VARCHAR(255) NOT NULl UNIQUE,
+  password VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS favorites(
+  user_id INTEGER NOT NULL,
+  restaurant_id INTEGER NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+  PRIMARY KEY (user_id, restaurant_id),
+
+  FOREIGN KEY (user_id)
+    REFERENCES users(id)
+    ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS histories(
+  user_id INTEGER NOT NULL,
+  history_id INTEGER NOT NULL,
+  restaurant_id INTEGER NOT NULL,
+  memo VARCHAR(255),
+  star VARCHAR(5),
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+  PRIMARY KEY(user_id, restaurant_id, history_id),
+  FOREIGN KEY(user_id)
+    REFERENCES users(id)
+    ON DELETE CASCADE
+);

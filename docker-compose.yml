@@ -1,0 +1,38 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: frontend
+    working_dir: /usr/src/app
+    volumes:
+      - .:/usr/src/app # 現在のフォルダ丸ごとコンテナに同期
+      - /usr/src/app/node_modules # ★これが必要！コンテナ内のnode_modulesをホスト側の空フォルダで上書きさせない設定
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://root:password@db:5432/my_database
+    tty: true
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16-alpine # ★軽量で安定しているPostgreSQL 16を使用
+    container_name: postgres_db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: password # ※本番環境では必ず変更してください
+      POSTGRES_DB: my_database
+    volumes:
+      - postgres_data:/var/lib/postgresql/data # ★データをローカルに永続化（コンテナを消してもデータが消えない）
+    healthcheck: # ★DBが本当にリクエストを受け付けられる状態か監視する設定
+      test: ["CMD-SHELL", "pg_isready -U root -d my_database"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
