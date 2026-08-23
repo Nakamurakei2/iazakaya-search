@@ -1,0 +1,20 @@
+{
+  // 保存時に自動で修正・整形を走らせる
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "always"
+  },
+  // 💡 TypeScriptファイルに対して Prettier をデフォルトにする設定
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript", // 💡これがあるか確認！
+    "typescriptreact" // (これが.tsx用)
+  ]
+}

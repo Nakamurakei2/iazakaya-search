@@ -1,6 +1,6 @@
 import { pool } from "@/lib/pool";
 import { cookies } from "next/headers";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 interface DatabaseError extends Error {
   code: string
@@ -16,9 +16,9 @@ function isDatabaseError(error: unknown): error is DatabaseError  {
  * @param request 
  * @returns 
  */
-export async function POST(request: Request) {
+export async function POST(req: NextRequest) {
   try {
-    const {username, email, password} = await request.json();
+    const {username, email, password} = await req.json();
     const query = `
     INSERT INTO users (name, email, password)
     VALUES ($1, $2, $3)

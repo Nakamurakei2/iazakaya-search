@@ -1,7 +1,9 @@
 "use client";
 
 import { Menu, X } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 
 const NAV_LINKS = [
   { label: "プロフィール", href: "/profile" },
@@ -10,18 +12,23 @@ const NAV_LINKS = [
 ];
 
 export function HeaderLoggedIn() {
+  const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  console.log("menuOpen", menuOpen);
-
   // ログアウト処理
-  const handleLogout = async () => {
-    const res = await fetch("http://localhost:5000/v1/auth/logout", {
-      method: "POST",
+  const handleLogout = async (): Promise<void> => {
+    const res = await fetch("/api/auth/logout", {
+      method: "DELETE",
       credentials: "include",
     });
     const data = await res.json();
-    console.log("logout response", data);
+    if (!res.ok) {
+      toast.error(data.message);
+    }
+
+    toast.message(data.message);
+    // ログイン画面へ遷移
+    router.push("/login");
   };
 
   return (

@@ -1,10 +1,10 @@
 import { pool } from "@/lib/pool";
 import { cookies } from "next/headers";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(request: Request) {
+export async function POST(req: NextRequest) {
   try {
-    const {email, password} = await request.json();
+    const {email, password} = await req.json();
 
     const query = `
       SELECT id FROM users 

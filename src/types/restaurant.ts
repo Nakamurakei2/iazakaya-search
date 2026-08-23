@@ -1,140 +1,63 @@
-/**
- * ジャンル
- * G001：居酒屋
- * G002：ダイニングバー
- * G003：創作料理
- * G004：和食
- * G005：洋食
- * G006：イタリアン・フレンチ
- * G008：焼肉
- * G013：ラーメン・麺類
- * G014：カフェ・スイーツ
- */
-export enum Genre {
-  G001 = "G001",
-  G002 = "G002",
-  G003 = "G003",
-  G004 = "G004",
-  G005 = "G005",
-  G006 = "G006",
-  G008 = "G008",
-  G013 = "G013",
-  G014 = "G014",
+interface GenreStyleValue {
+  name: string;
+  c: string;
 }
 
-export type Budget = "standard" | "premium" | "light";
+export type GenreStyleMap = {
+  [code: string]: GenreStyleValue | undefined;
+};
 
-export type Venue = {
+export const GENRE_STYLE: GenreStyleMap = {
+  G001: { name: "居酒屋", c: "#3E8EA8" },
+  G002: { name: "ダイニングバー・バル", c: "#7A5FB0" },
+  G003: { name: "創作料理", c: "#7A5FB0" },
+  G004: { name: "和食", c: "#7A5FB0" }, // 焼き鳥・おでん等もここに含まれることが多い
+  G005: { name: "洋食", c: "#5C7A4B" },
+  G006: { name: "イタリアン・フレンチ", c: "#5C7A4B" },
+  G007: { name: "中華", c: "#D9A441" },
+  G008: { name: "焼肉・ホルモン", c: "#A83232" },
+  G009: { name: "アジア・エスニック料理", c: "#D9A441" },
+  G013: { name: "ラーメン", c: "#D9A441" },
+  G014: { name: "カフェ・スイーツ", c: "#C98A2C" },
+  G017: { name: "韓国料理", c: "#A83232" },
+
+  // マスタにないコード、またはコード自体が取れなかった場合のフォールバック
+  default: { name: "その他", c: "#888888" },
+};
+
+export type Location = {
+  latitude: number;
+  longitude: number;
+};
+
+export type RestaurantType = {
+  id: string;
+  access: string;
   name: string;
-  area: string;
-  walk: string;
+  station_name: string;
   genre: {
     name: string;
+    code: string;
   };
-  price: string;
-  tags: string[];
-  highlight: string;
-  status: "available" | "limited" | "request";
-  distance: number | undefined;
-  catch: string;
-};
-
-export type Plan = {
-  id: string;
-  title: string;
-  fit: string;
-  mood: string;
-  first: Venue;
-  second: Venue;
-  total: string;
-  move: string;
-};
-
-export type Izakayas = {
-  id: string;
-  // アクセス
-  access: string;
-  // 住所
-  address: string;
-  // 平均予算
-  budget: {
-    average: string;
-    name: string; // "2001～3000円"
-  };
-  // カード決済
-  card: string;
-  budget_memo: string; // "りそなPay/EPOSPayその他各種※お通し代:有"
-  // 借り切り
-  charter: string;
-  // 子連れ
-  child: string;
-  // コース
-  course: string;
-  // 飲み放題
-  free_drink: string;
-  // 食べ放題
-  free_food: string;
-  // 店名
-  name: string;
-  // 店名（かな）
-  name_kana: string;
-  // 喫煙
-  non_smoking: string;
-  // オープン
+  lat: number;
+  lng: number;
   open: string;
-  //写真
   photo: {
-    // SP
     mobile: {
       l: string;
       s: string;
     };
-    pc: {
-      l: string;
-      s: string;
-    };
   };
-  // 詳細
-  shop_detail_memo: string;
-  // 店舗URL
   urls: {
     pc: string;
   };
-  // ジャンル
-  genre: {
+  budget: {
     name: string;
   };
-  // 最寄り駅
-  station_name: string;
-  // 定休日
   close: string;
-  // 電話番号
-  tel: string;
-  // 緯度
-  lat: number;
-  // 経度
-  lng: number;
-  // お店までの直線距離一覧
-  distances: number[] | undefined;
-  // お店までの距離
-  distance?: number;
-  // キャッチ文
-  catch: string;
+  capacity: string;
 };
 
-export const budgets: Array<{ label: string; value: Budget }> = [
-  { label: "バランス", value: "standard" },
-  { label: "少し良い店", value: "premium" },
-  { label: "軽め", value: "light" },
-];
-
-export const genres: Array<{ label: string; value: Genre }> = [
-  { label: "居酒屋", value: Genre.G001 },
-  { label: "ダイニング・バー", value: Genre.G002 },
-  { label: "和食", value: Genre.G004 },
-  { label: "洋食", value: Genre.G005 },
-  { label: "イタリアン・フレンチ", value: Genre.G006 },
-  { label: "焼肉・ホルモン", value: Genre.G008 },
-  { label: "ラーメン・麺類", value: Genre.G013 },
-  { label: "カフェ・スイーツ", value: Genre.G014 },
-];
+export type ShopsType = RestaurantType & {
+  distanceKm: number;
+};

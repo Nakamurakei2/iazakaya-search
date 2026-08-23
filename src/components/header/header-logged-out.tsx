@@ -1,17 +1,24 @@
 "use client";
 
-import { Menu, X } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export function HeaderLoggedOut() {
+  const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
 
+  /**
+   * ログインボタン押下時処理
+   */
   const handleLogin = () => {
-    console.log("login process");
+    router.push("/login");
   };
 
+  /**
+   * 登録ボタン押下時処理
+   */
   const handleSignup = () => {
-    console.log("handleSingup");
+    router.push("/signup");
   };
 
   return (
@@ -23,15 +30,14 @@ export function HeaderLoggedOut() {
             <div className="header__buttons">
               <button
                 type="button"
-                className="header__logoutButton"
+                className="header__loginButton"
                 onClick={handleLogin}
               >
                 ログイン
               </button>
-
               <button
                 type="button"
-                className="header__logoutButton"
+                className="header__signupButton"
                 onClick={handleSignup}
               >
                 登録
