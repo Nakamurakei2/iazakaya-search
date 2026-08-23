@@ -66,6 +66,62 @@ button {
   top: 24px;
 }
 
+.baseline {
+  align-items: baseline !important;
+}
+
+.display-column {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.page-size-select-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  color: #000;
+}
+
+.page-size-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-color: transparent;
+  color: var(--color-dark-brown);
+  border-radius: 8px;
+  padding: 5px 28px 5px 10px;
+  font-size: 12.5px;
+  font-family: inherit;
+  cursor: pointer;
+  line-height: 1.4;
+  border: 1x solid #000;
+  width: 100px;
+}
+
+.page-size-select:hover {
+  border-color: var(--color-text-muted);
+}
+
+.page-size-select:focus {
+  outline: none;
+  border-color: var(--iz-lantern);
+  box-shadow: 0 0 0 2px rgba(226, 83, 43, 0.25);
+}
+
+.page-size-select option {
+  background: var(--iz-bg-elevated);
+  color: var(--color-text-muted);
+}
+
+.page-size-caret {
+  position: absolute;
+  right: 8px;
+  color: var(--iz-text-faint);
+  pointer-events: none;
+}
+
 .results-panel {
   min-width: 0;
   padding: 24px;
@@ -82,6 +138,7 @@ button {
   display: flex;
   justify-content: space-between;
   gap: 18px;
+  margin-bottom: 10px;
 }
 
 .brand-row {
@@ -112,7 +169,7 @@ h1 {
 }
 
 h2 {
-  color: #1f2927;
+  color: #fff;
   font-size: 1.4rem;
   margin-bottom: 0;
 }
@@ -145,6 +202,20 @@ textarea {
   outline: none;
   padding: 11px 12px;
   width: 100%;
+}
+
+.input:-webkit-autofill,
+.input:-webkit-autofill:hover,
+.input:-webkit-autofill:focus,
+.input:-webkit-autofill:active {
+  /* 自動補完の白を、内側の黒い影で完全に塗りつぶして隠す */
+  -webkit-box-shadow: 0 0 0 100px var(--color-bg-elevated) inset !important;
+
+  /* 文字色は白（または元の文字色）に固定する */
+  -webkit-text-fill-color: #ffffff !important;
+
+  /* 3. 【追加】元のデザインの枠線をここで強制指定する */
+  border: 1px solid var(--color-border) !important;
 }
 
 textarea {
@@ -1024,13 +1095,15 @@ button.scroll-up {
   z-index: 50;
   background-color: #f7f5f0;
   border-bottom: 1px solid rgba(20, 24, 31, 0.1);
-  z-index: 999;
   font-family:
     -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
+  padding: 15px;
+  margin-bottom: 20px;
 }
 
 .header__buttons {
   display: flex;
+  gap: 10px;
 }
 
 .header__bar {
@@ -1081,9 +1154,21 @@ button.scroll-up {
   white-space: nowrap;
 }
 
+.header__loginButton {
+  font-size: 12px;
+  color: #14181f;
+  background-color: #fff;
+  border: 1px solid #14181f;
+  border-radius: 999px;
+  padding: 7px 14px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.header__signupButton,
 .header__logoutButton {
   font-size: 12px;
-  color: #f7f5f0;
+  color: #fff;
   background-color: #14181f;
   border-radius: 999px;
   padding: 7px 14px;
@@ -1326,6 +1411,27 @@ button.scroll-up {
   text-decoration: none;
 }
 
+.required-badge {
+  font-size: 10px;
+  font-weight: 700;
+  color: #fbefe6;
+  background: var(--iz-lantern);
+  border-radius: 4px;
+  padding: 1px 6px;
+  letter-spacing: 0.02em;
+}
+
+.optional-badge {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--iz-text-muted);
+  background: rgba(179, 165, 148, 0.12);
+  border: 1px solid var(--iz-border);
+  border-radius: 4px;
+  padding: 1px 6px;
+  letter-spacing: 0.02em;
+}
+
 .error-message {
   font-size: 12px;
   color: red;
@@ -1450,15 +1556,6 @@ button.scroll-up {
   animation: spin 1s linear infinite;
 }
 
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 /* アニメーション定義 */
 @keyframes fadeIn {
   from {
@@ -1489,7 +1586,9 @@ button.scroll-up {
     transform: rotate(360deg);
   }
 }
-
+.spin {
+  animation: spin 1s linear infinite;
+}
 /* 点滅アニメーションの定義 */
 @keyframes pulse {
   0%,
@@ -1556,6 +1655,10 @@ button.scroll-up {
   }
 }
 
+.color-black {
+  color: var(--color-bg);
+}
+
 :root {
   /* ご利用のカラーシステムに合わせて数値を調整してください */
   --color-bg: #120e0a;
@@ -1567,6 +1670,17 @@ button.scroll-up {
   --color-lantern: #e2532b;
   --color-lantern-dark: #9e3213;
   --color-gold: #d9a441;
+  --iz-bg: #15110d;
+  --iz-bg-elevated: #211a14;
+  --iz-bg-elevated-hover: #2a211a;
+  --iz-border: #3a2c20;
+  --iz-lantern: #e2532b;
+  --iz-lantern-dark: #b4472e;
+  --iz-gold: #d9a441;
+  --iz-text-primary: #f5ecdf;
+  --iz-text-muted: #b3a594;
+  --iz-text-faint: #7a6e60;
+  --color-dark-brown: #7a7069;
 }
 .page {
   position: relative;
@@ -1637,7 +1751,7 @@ button.scroll-up {
 .search-row {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 20px;
 }
 
 .input-wrap {
@@ -1707,6 +1821,177 @@ button.scroll-up {
 
 .page-indicator-small {
   color: var(--color-text-faint);
+}
+
+.advanced-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.advanced-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 1px solid var(--iz-border);
+  color: var(--iz-text-muted);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12.5px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.advanced-toggle-btn:hover {
+  border-color: var(--iz-lantern);
+  color: var(--iz-text-primary);
+}
+
+.advanced-toggle-caret {
+  transition: transform 0.15s ease;
+}
+
+.advanced-toggle-caret--open {
+  transform: rotate(180deg);
+}
+
+.quick-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(217, 164, 65, 0.12);
+  border: 1px solid rgba(217, 164, 65, 0.4);
+  color: var(--iz-gold);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12.5px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.quick-filter-btn:hover {
+  background: rgba(217, 164, 65, 0.2);
+}
+
+.advanced-panel {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--iz-border);
+}
+
+.advanced-panel-label {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--iz-text-muted);
+}
+
+.genre-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.genre-chip-btn {
+  background: transparent;
+  border: 1px solid;
+  border-radius: 999px;
+  padding: 6px 13px;
+  font-size: 12.5px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.genre-chip-btn--active {
+  color: #fbefe6 !important;
+}
+
+.advanced-panel-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.advanced-clear-btn {
+  background: transparent;
+  border: 1px solid var(--iz-border);
+  color: var(--iz-text-muted);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 12.5px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.advanced-clear-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.advanced-clear-btn:not(:disabled):hover {
+  border-color: var(--iz-lantern);
+  color: var(--iz-text-primary);
+}
+
+.advanced-apply-btn {
+  background: linear-gradient(
+    180deg,
+    var(--iz-lantern),
+    var(--iz-lantern-dark)
+  );
+  border: none;
+  color: #fbefe6;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 12.5px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* 適用中のジャンルフィルタ表示 */
+.applied-filters-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 4px;
+  margin: 10px 0;
+}
+
+.applied-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid;
+  border-radius: 999px;
+  padding: 3px 6px 3px 10px;
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.applied-filter-chip button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  color: inherit;
+  cursor: pointer;
 }
 
 .list {
@@ -2029,4 +2314,135 @@ button.scroll-up {
   z-index: 60;
   max-width: 88%;
   text-align: center;
+}
+
+.contact-card {
+  position: relative;
+  border-radius: 14px;
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--iz-text-muted);
+  user-select: none;
+}
+.checkbox-input {
+  width: auto;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.checkbox-label {
+  line-height: 1.5;
+}
+
+.submit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(
+    180deg,
+    var(--iz-lantern),
+    var(--iz-lantern-dark)
+  );
+  color: #fbefe6;
+  border: none;
+  border-radius: 10px;
+  padding: 13px 20px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  box-shadow: 0 4px 14px rgba(226, 83, 43, 0.35);
+  text-decoration: none;
+  margin-top: 4px;
+}
+
+.submit-btn:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.ghost-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: transparent;
+  color: var(--iz-text-primary);
+  border: 1px solid var(--iz-border);
+  border-radius: 10px;
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.ghost-btn:hover {
+  border-color: var(--iz-lantern);
+}
+
+/* ---------------------------------------------------------------------- */
+/* 送信完了画面                                                            */
+/* ---------------------------------------------------------------------- */
+.success-card {
+  align-items: center;
+  text-align: center;
+  padding: 40px 20px 32px;
+  gap: 14px;
+}
+
+.success-icon-wrap {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(
+    180deg,
+    var(--iz-lantern),
+    var(--iz-lantern-dark)
+  );
+  color: #fbefe6;
+  box-shadow: 0 4px 18px rgba(226, 83, 43, 0.4);
+  margin-bottom: 4px;
+}
+
+.success-title {
+  font-size: 17px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.success-body {
+  font-size: 13px;
+  color: var(--iz-text-muted);
+  line-height: 1.8;
+  margin: 0;
+}
+
+.success-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.success-link {
+  text-decoration: none;
 }

@@ -3,8 +3,11 @@ type Coordinates = {
   longitude: number;
 };
 
+/**
+ * 現在地の緯度・経度を取得
+ */
 export const currentLocation = (): Promise<Coordinates> => {
-  return new Promise<Coordinates>((resolve, reject) => {
+  return new Promise<Coordinates>(async (resolve, reject) => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
