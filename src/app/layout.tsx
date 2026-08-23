@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { Toaster } from "sonner";
+import { Header } from "@/components/header/header";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,7 +22,21 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
-      <body>{children}</body>
+      <body>
+        <style>{FONT_IMPORT}</style>
+        <Header />
+        {children}
+        <Toaster position="top-right" richColors />
+      </body>
     </html>
   );
 }
+
+// ---------------------------------------------------------------------------
+// スタイル定義
+// ---------------------------------------------------------------------------
+const FONT_IMPORT = `
+@import url('https://fonts.googleapis.com/css2?family=Kaisei+Decol&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap');
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+input::placeholder { color: #7A6E60; }
+`;
