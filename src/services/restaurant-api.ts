@@ -1,20 +1,14 @@
-import { Location, RestaurantType, ShopsType } from "@/types/restaurant";
+import {
+  AddFavoritesButtonProps,
+  PaginationButtonProps,
+  PaginationProps,
+  Props,
+  RestaurantType,
+  SearchProps,
+} from "@/types/restaurant";
 import { calculateDistance } from "@/utils/caluclate-distance";
 import { currentLocation } from "@/utils/location";
-import { Dispatch, RefObject, SetStateAction } from "react";
 import { toast } from "sonner";
-
-type Props = {
-  pageSize: number;
-  setStartPage: Dispatch<SetStateAction<number>>;
-  setIsLocating: Dispatch<SetStateAction<boolean>>;
-  setLocationNotice: Dispatch<SetStateAction<string>>;
-  setCurrentLocationData: Dispatch<SetStateAction<Location | null>>;
-  setTotalRestaurants: Dispatch<SetStateAction<number>>;
-  setShops: Dispatch<SetStateAction<ShopsType[] | undefined>>;
-  setStationName: Dispatch<SetStateAction<string>>;
-  setPage: Dispatch<SetStateAction<number>>;
-};
 
 /**
  * 現在地から検索ボタン押下時処理
@@ -22,6 +16,7 @@ type Props = {
 export const handleLocationSearch = async (props: Props) => {
   const {
     pageSize,
+    selectedGenres,
     setStartPage,
     setIsLocating,
     setLocationNotice,
@@ -36,6 +31,8 @@ export const handleLocationSearch = async (props: Props) => {
   setIsLocating(true);
   setLocationNotice("");
 
+  const genreString = selectedGenres.join(",");
+
   try {
     // 現在地を取得
     const { latitude, longitude } = await currentLocation();
@@ -49,10 +46,11 @@ export const handleLocationSearch = async (props: Props) => {
       lng: String(longitude),
       count: String(pageSize),
       start: String(1),
+      genre: genreString,
     });
 
     // 店舗データを取得
-    const res = await fetch(`/api/restaurant/search?${params.toString()}`, {
+    const res = await fetch(`/api/restaurants/search?${params.toString()}`, {
       method: "GET",
     });
     const data = await res.json();
@@ -64,6 +62,7 @@ export const handleLocationSearch = async (props: Props) => {
     const results_available = data.results_available;
     setTotalRestaurants(results_available); // 検索結果の全件数
     const shops: RestaurantType[] = data.shop;
+    console.log("shops!!", shops);
 
     // APIから取得した店舗データを現在地から近い順に並び替える
     // もしかするとこの辺いらないかも→API側でsort機能があるので
@@ -73,6 +72,7 @@ export const handleLocationSearch = async (props: Props) => {
         distanceKm: calculateDistance(latitude, longitude, shop.lat, shop.lng),
       }))
       .sort((a, b) => a.distanceKm - b.distanceKm);
+    console.log("sorted", sorted);
 
     // ソート済みの店舗データをstateに格納
     setShops(sorted);
@@ -81,7 +81,7 @@ export const handleLocationSearch = async (props: Props) => {
     setStartPage(1);
     setLocationNotice("現在地から");
   } catch (e: unknown) {
-    console.error("unexpected error", e);
+    console.error("unexpectederror", e);
 
     if (e instanceof Error) {
       toast.error(e.message);
@@ -91,18 +91,6 @@ export const handleLocationSearch = async (props: Props) => {
   }
 };
 
-type SearchProps = {
-  pageSize: number;
-  startPage: number;
-  stationName: string;
-  setIsLocating: Dispatch<SetStateAction<boolean>>;
-  setTotalRestaurants: Dispatch<SetStateAction<number>>;
-  setShops: Dispatch<SetStateAction<ShopsType[] | undefined>>;
-  setPage: Dispatch<SetStateAction<number>>;
-  setLocationNotice: Dispatch<SetStateAction<string>>;
-  setCurrentLocationData: Dispatch<SetStateAction<Location | null>>;
-};
-
 /**
  * 入力欄の「虫眼鏡」アイコンクリック or Enterキー押下時処理
  */
@@ -110,6 +98,7 @@ export const handleSearch = async (props: SearchProps) => {
   const {
     pageSize,
     startPage,
+    selectedGenres,
     stationName,
     setIsLocating,
     setTotalRestaurants,
@@ -123,8 +112,8 @@ export const handleSearch = async (props: SearchProps) => {
     toast.error("駅名を入力してください。");
     setShops([]);
   }
-
   let trimmed;
+  const genreString = selectedGenres.join(",");
 
   // 末尾に「駅」が入ってる場合は省く
   const regex = /駅/g;
@@ -139,9 +128,10 @@ export const handleSearch = async (props: SearchProps) => {
       count: String(pageSize),
       start: String(startPage),
       station: trimmed,
+      genre: genreString,
     });
     // stationNameに検索されたgeolocationを取得する
-    const res = await fetch(`/api/restaurant/search?${params.toString()}`);
+    const res = await fetch(`/api/restaurants/search?${params.toString()}`);
     const data = await res.json();
 
     if (!res.ok) {
@@ -191,17 +181,6 @@ export const handleReserve = (shop: any) => {
   // window.open(url, "_blank", "noopener,noreferrer");
 };
 
-type PaginationProps = {
-  page?: number;
-  pageSize: number;
-  startPage: number;
-  currentLocationData: Location | null;
-  setShops: Dispatch<SetStateAction<ShopsType[] | undefined>>;
-  setPage: Dispatch<SetStateAction<number>>;
-  setStartPage: Dispatch<SetStateAction<number>>;
-  scrollRef: RefObject<HTMLDivElement | null>;
-};
-
 /**
  * ページネーション「>」ボタンクリック時処理
  */
@@ -229,7 +208,7 @@ export const handlePaginateNext = async (props: PaginationProps) => {
   });
 
   try {
-    const res = await fetch(`/api/restaurant/search?${params.toString()}`, {
+    const res = await fetch(`/api/restaurants/search?${params.toString()}`, {
       method: "GET",
     });
     const data = await res.json();
@@ -295,7 +274,7 @@ export const handlePaginatePrevious = async (props: PaginationProps) => {
   });
 
   try {
-    const res = await fetch(`/api/restaurant/search?${params.toString()}`, {
+    const res = await fetch(`/api/restaurants/search?${params.toString()}`, {
       method: "GET",
     });
     const data = await res.json();
@@ -333,15 +312,6 @@ export const handlePaginatePrevious = async (props: PaginationProps) => {
   }
 };
 
-type PaginationButtonProps = {
-  pageNumber: number;
-  setStartPage: Dispatch<SetStateAction<number>>;
-  pageSize: number;
-  currentLocationData: Location | null;
-  setShops: Dispatch<SetStateAction<ShopsType[] | undefined>>;
-  setPage: Dispatch<SetStateAction<number>>;
-};
-
 /**
  * ページネーションのボタン押下時処理
  */
@@ -370,7 +340,7 @@ export const handlePaginateButtonClick = async (
   });
 
   try {
-    const res = await fetch(`/api/restaurant/search?${params}`, {
+    const res = await fetch(`/api/restaurants/search?${params}`, {
       method: "GET",
     });
 
@@ -394,7 +364,41 @@ export const handlePaginateButtonClick = async (
     setShops(sorted);
     setPage(pageNumber);
     setStartPage(newStartPage);
-
-    console.log("data@@@", data);
   } catch (e: unknown) {}
+};
+
+/**
+ * お気に入り登録ボタン押下時処理
+ * @returns レストランのid
+ */
+export const handleAddFavoritesButtonClick = async (
+  props: AddFavoritesButtonProps,
+): Promise<string | undefined> => {
+  const { restaurantId } = props;
+
+  try {
+    const res = await fetch(`/api/restaurants/${restaurantId}/favorites`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ restaurantId }),
+      // signal
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      toast.error(data.message);
+      return;
+    }
+    toast.success(data.message);
+
+    return data.restaurant_id;
+  } catch (e: unknown) {
+    console.error("e", e);
+
+    if (e instanceof Error) {
+      toast.error(e.message);
+    }
+  }
 };

@@ -21,6 +21,7 @@ export async function GET(req: NextRequest) {
     const count = req.nextUrl.searchParams.get("count");
     const start = req.nextUrl.searchParams.get("start");
     const station = req.nextUrl.searchParams.get("station");
+    const genre = req.nextUrl.searchParams.get("genre");
 
     const params = new URLSearchParams({
       count: String(count),
@@ -50,6 +51,13 @@ export async function GET(req: NextRequest) {
         params.append("lat", String(latitude));
         params.append("lng", String(longitude));
       }
+    }
+
+    if (genre) {
+      const genreArray = genre.split(",");
+      genreArray.forEach((g) => {
+        params.append("genre", g);
+      });
     }
 
     const apiUrl = `${apiBaseUrl}&${params}&format=json`;

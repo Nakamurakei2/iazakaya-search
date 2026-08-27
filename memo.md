@@ -173,3 +173,38 @@ PostgreSQL
 
 ### メリット
 - 無駄なHTTP通信がない
+
+
+あとでAPIのレスポンスも定義する
+messageのみを返したりdetailを返したりしてるので
+searchパラメータがURLに反映されてないので反映するように修正する
+
+## Nextjsにおけるサーバーサイドのparams
+- `req` (第一引数)の役割と中身
+`req`は、ブラウザ（フロントエンド）から送信されてきたHTTPリクエストの生の情報にアクセスするためのオブジェクト。
+<reqからしか取れないもの>
+・`await req.json()`：フロント側が`body: JSON.stringify({...})`で送ってきたデータ。
+・`req.cookies`：ログイン状態などを判別するためのクッキー情報
+・`req.headers`：認証トークン（Bearer Token）や、ブラウザの種類、IPアドレスなどのヘッダー情報
+・`req.nextUrl.searchParams`：URLの末尾につくクエリパラメータ（例：`?page=1&sort=descのようなpageやsort`）
+
+- `context`（主に内部の`params`）は、Nextjsのフォルダ構成によって自動的に抽出されたURLパス内の動的な値を受け取るためのもの。
+<context.paramsからしか受け取れないもの>
+・フォルダ名が`[restaurantId]`なら→`{restaurantId: 123}`
+・フォルダ名が`[userId]`なら→`{userId: 'abc'}`
+
+
+## PostgreSQL
+- CTE(Common Table Expression)
+CTE（共通テーブル式）とは、`WITH`句を使って一時的な名前付き結果セットを定義し、複雑なクエリを読みやすく整理する機能。
+
+```
+WITH regional_sales AS (
+  SELECT regin, SUM(amount) AS total_sales
+  FROM orders
+  GROUP BY region
+)
+SELECT regin, total_sales
+FROM regional_sales
+WHERE total_sales > 1000;
+```

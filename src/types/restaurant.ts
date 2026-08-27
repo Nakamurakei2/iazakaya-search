@@ -1,3 +1,5 @@
+import { Dispatch, RefObject, SetStateAction } from "react";
+
 interface GenreStyleValue {
   name: string;
   c: string;
@@ -56,8 +58,91 @@ export type RestaurantType = {
   };
   close: string;
   capacity: string;
+  sub_genre: {
+    name: string;
+    code: string;
+  };
 };
 
 export type ShopsType = RestaurantType & {
   distanceKm: number;
 };
+
+/**
+ * 現在地から検索ボタン押下時のProps型定義
+ */
+export type Props = {
+  pageSize: number;
+  selectedGenres: string[];
+  setStartPage: Dispatch<SetStateAction<number>>;
+  setIsLocating: Dispatch<SetStateAction<boolean>>;
+  setLocationNotice: Dispatch<SetStateAction<string>>;
+  setCurrentLocationData: Dispatch<SetStateAction<Location | null>>;
+  setTotalRestaurants: Dispatch<SetStateAction<number>>;
+  setShops: Dispatch<SetStateAction<ShopsType[] | undefined>>;
+  setStationName: Dispatch<SetStateAction<string>>;
+  setPage: Dispatch<SetStateAction<number>>;
+};
+
+/**
+ * 入力欄の「虫眼鏡」アイコンクリック or Enterキー押下時のProps型定義
+ */
+export type SearchProps = {
+  pageSize: number;
+  selectedGenres: string[];
+  startPage: number;
+  stationName: string;
+  setIsLocating: Dispatch<SetStateAction<boolean>>;
+  setTotalRestaurants: Dispatch<SetStateAction<number>>;
+  setShops: Dispatch<SetStateAction<ShopsType[] | undefined>>;
+  setPage: Dispatch<SetStateAction<number>>;
+  setLocationNotice: Dispatch<SetStateAction<string>>;
+  setCurrentLocationData: Dispatch<SetStateAction<Location | null>>;
+};
+
+/**
+ * ページネーションのPropsの型定義
+ */
+export type PaginationProps = {
+  page?: number;
+  pageSize: number;
+  startPage: number;
+  currentLocationData: Location | null;
+  setShops: Dispatch<SetStateAction<ShopsType[] | undefined>>;
+  setPage: Dispatch<SetStateAction<number>>;
+  setStartPage: Dispatch<SetStateAction<number>>;
+  scrollRef: RefObject<HTMLDivElement | null>;
+};
+
+/**
+ * ページネーションのボタン押下時のPropsの型定義
+ */
+export type PaginationButtonProps = {
+  pageNumber: number;
+  setStartPage: Dispatch<SetStateAction<number>>;
+  pageSize: number;
+  currentLocationData: Location | null;
+  setShops: Dispatch<SetStateAction<ShopsType[] | undefined>>;
+  setPage: Dispatch<SetStateAction<number>>;
+};
+
+/**
+ * お気に入り登録ボタン押下時のPropsの型定義
+ */
+export type AddFavoritesButtonProps = {
+  restaurantId: string;
+};
+
+/**
+ * お気に入り登録ずみのレストランIDの型定義
+ */
+export interface FavoriteItem {
+  restaurant_id: string;
+}
+
+/**
+ * お気に入り登録APIの型定義
+ */
+export interface FavoriteFormProps {
+  data: FavoriteItem[];
+}

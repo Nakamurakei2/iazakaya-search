@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { HeaderLoggedIn } from "./haeder-logged-in";
+import { HeaderLoggedIn } from "./header-logged-in";
 import { HeaderLoggedOut } from "./header-logged-out";
 
 /**
