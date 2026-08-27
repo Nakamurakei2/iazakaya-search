@@ -14,30 +14,23 @@ import {
   MapPinned,
   SlidersHorizontal,
   ChevronDown,
+  HeartOff,
+  Heart,
 } from "lucide-react";
 import { Pagination } from "@/components/pagination";
 import {
+  handleAddFavoritesButtonClick,
   handleLocationSearch,
   handlePaginateButtonClick,
   handlePaginateNext,
   handlePaginatePrevious,
-  handleReserve,
   handleSearch,
 } from "@/services/restaurant-api";
 import { GENRE_STYLE, Location, ShopsType } from "@/types/restaurant";
 import { useRouter } from "next/navigation";
 
-// ---------------------------------------------------------------------------
-// モックデータ
-// ---------------------------------------------------------------------------
 const pageSize_OPTIONS = [5, 10, 20, 30] as const;
 
-const RESERVE_URL_BASE = "https://reserve.yokocho-navi.jp/shop";
-
-// ---------------------------------------------------------------------------
-// ジャンルマスタ（表示用のUIモック）
-// ※ コード・名称は @/types/restaurant 側の定義に合わせて調整してください
-// ---------------------------------------------------------------------------
 const GENRE_OPTIONS = [
   { code: "G001", name: "居酒屋" },
   { code: "G002", name: "ダイニングバー・バル" },
@@ -47,6 +40,7 @@ const GENRE_OPTIONS = [
   { code: "G013", name: "ラーメン" },
   { code: "G012", name: "バー・カクテル" },
   { code: "G016", name: "お好み焼き・もんじゃ" },
+  { code: "G014", name: "その他" },
 ] as const;
 
 const IZAKAYA_GENRE_CODE = "G001";
@@ -67,7 +61,8 @@ export default function IzakayaSearchApp() {
   const [currentLocationData, setCurrentLocationData] =
     useState<Location | null>(null); // 現在地格納
 
-  // --- 詳細検索（ジャンル絞り込み）: UIのみ。検索処理との連携は未実装 ---
+  const [favoriteIds, setFavoriteIds] = useState<string[]>([]); // お気に入り登録
+
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
 
@@ -119,6 +114,7 @@ export default function IzakayaSearchApp() {
 
     handleSearch({
       pageSize,
+      selectedGenres,
       startPage,
       stationName,
       setIsLocating,
@@ -128,6 +124,20 @@ export default function IzakayaSearchApp() {
       setLocationNotice,
       setCurrentLocationData,
     });
+
+    setIsAdvancedOpen(false);
+  };
+
+  /**
+   * お気に入り登録ボタン
+   */
+  const handleAddFavorites = async (id: string): Promise<void> => {
+    const restaurantId = await handleAddFavoritesButtonClick({
+      restaurantId: id,
+    });
+    if (restaurantId) setFavoriteIds((prev) => [...prev, restaurantId]);
+
+    setSelectedId(""); // 詳細ダイアログ閉じる
   };
 
   return (
@@ -157,6 +167,7 @@ export default function IzakayaSearchApp() {
                 onClick={() => {
                   handleSearch({
                     pageSize,
+                    selectedGenres,
                     startPage,
                     stationName,
                     setIsLocating,
@@ -166,6 +177,7 @@ export default function IzakayaSearchApp() {
                     setLocationNotice,
                     setCurrentLocationData,
                   });
+                  setIsAdvancedOpen(false);
                 }}
               />
               <input
@@ -204,6 +216,7 @@ export default function IzakayaSearchApp() {
 
                 handleLocationSearch({
                   pageSize,
+                  selectedGenres,
                   setStartPage,
                   setIsLocating,
                   setLocationNotice,
@@ -213,6 +226,9 @@ export default function IzakayaSearchApp() {
                   setStationName,
                   setPage,
                 });
+
+                // 詳細検索窓を閉じる
+                setIsAdvancedOpen(false);
               }}
               className="location-btn"
               disabled={isLocating}
@@ -227,7 +243,6 @@ export default function IzakayaSearchApp() {
             </button>
           </form>
 
-          {/* 詳細検索トグル + 居酒屋クイックフィルタ（UIのみ） */}
           <div className="advanced-toggle-row">
             <button
               type="button"
@@ -254,7 +269,6 @@ export default function IzakayaSearchApp() {
             </button>
           </div>
 
-          {/* 詳細検索パネル（ジャンル絞り込み・UIのみ） */}
           {isAdvancedOpen && (
             <div className="advanced-panel">
               <p className="advanced-panel-label">ジャンルで絞り込む</p>
@@ -299,7 +313,7 @@ export default function IzakayaSearchApp() {
                   className="advanced-apply-btn"
                   onClick={handleApplyAdvancedSearch}
                 >
-                  この条件で検索
+                  この条件で登録
                 </button>
               </div>
             </div>
@@ -313,7 +327,6 @@ export default function IzakayaSearchApp() {
           )}
         </section>
 
-        {/* 適用中のジャンルフィルタ（UIのみ） */}
         {selectedGenres.length > 0 && (
           <div className="applied-filters-row">
             {selectedGenres.map((code) => {
@@ -409,15 +422,32 @@ export default function IzakayaSearchApp() {
                   <div className="card-top-row">
                     <h2 className="card-name">{shop.name}</h2>
 
-                    <span
-                      className="genre-tag"
-                      style={{
-                        color: style.c,
-                        borderColor: style.c,
-                      }}
-                    >
-                      {shop.genre.name}
-                    </span>
+                    <div className="genre-column">
+                      <span
+                        className="genre-tag"
+                        style={{
+                          color: GENRE_STYLE[shop.genre.code]?.c ?? "#888888",
+                          borderColor:
+                            GENRE_STYLE[shop.genre.code]?.c ?? "#888888",
+                        }}
+                      >
+                        {shop.genre.name}
+                      </span>
+
+                      {shop.sub_genre ? (
+                        <span
+                          className="genre-tag"
+                          style={{
+                            color:
+                              GENRE_STYLE[shop.sub_genre.code]?.c ?? "#888888",
+                            borderColor:
+                              GENRE_STYLE[shop.sub_genre.code]?.c ?? "#888888",
+                          }}
+                        >
+                          {shop.sub_genre.name}
+                        </span>
+                      ) : null}
+                    </div>
                   </div>
 
                   <div className="card-meta-row">
@@ -524,16 +554,34 @@ export default function IzakayaSearchApp() {
                     {selected.name}
                   </h2>
 
-                  <span
-                    className="genre-tag"
-                    style={{
-                      color: GENRE_STYLE[selected.genre.code]?.c ?? "#888888",
-                      borderColor:
-                        GENRE_STYLE[selected.genre.code]?.c ?? "#888888",
-                    }}
-                  >
-                    {selected.genre.name}
-                  </span>
+                  <div className="genre-column">
+                    <span
+                      className="genre-tag"
+                      style={{
+                        color: GENRE_STYLE[selected.genre.code]?.c ?? "#888888",
+                        borderColor:
+                          GENRE_STYLE[selected.genre.code]?.c ?? "#888888",
+                      }}
+                    >
+                      {selected.genre.name}
+                    </span>
+
+                    {selected.sub_genre ? (
+                      <span
+                        className="genre-tag"
+                        style={{
+                          color:
+                            GENRE_STYLE[selected.sub_genre.code]?.c ??
+                            "#888888",
+                          borderColor:
+                            GENRE_STYLE[selected.sub_genre.code]?.c ??
+                            "#888888",
+                        }}
+                      >
+                        {selected.sub_genre.name}
+                      </span>
+                    ) : null}
+                  </div>
                 </div>
 
                 <div className="rating-row">
@@ -568,10 +616,19 @@ export default function IzakayaSearchApp() {
                   <div className="info-row">
                     <dt className="info-label">
                       <Wallet size={13} className="meta-icon" />
-                      予算目安
+                      店名
                     </dt>
 
                     <dd className="info-value">{selected.name}</dd>
+                  </div>
+
+                  <div className="info-row">
+                    <dt className="info-label">
+                      <Wallet size={13} className="meta-icon" />
+                      店名
+                    </dt>
+
+                    <dd className="info-value">{selected.budget.name}</dd>
                   </div>
 
                   <div className="info-row">
@@ -583,21 +640,31 @@ export default function IzakayaSearchApp() {
                     <dd className="info-value">{selected.capacity}席</dd>
                   </div>
                 </dl>
-
-                {/* <div className="tag-row">
-                  {selected.tags.map((t) => (
-                    <span key={t} className="chip">
-                      {t}
-                    </span>
-                  ))}
-                </div> */}
               </div>
 
-              <div className="dialog-footer">
-                <button
-                  className="reserve-btn"
-                  onClick={() => handleReserve(selected)}
-                >
+              {/* ログインされてない場合は表示しない */}
+              <div className="dialog-footer favorite-dialog-footer">
+                {favoriteIds.includes(selected.id) ? (
+                  <button
+                    type="button"
+                    className="ghost-btn favorite-remove-btn"
+                    // onClick={() => handleRemoveFavorites(selected.id)}
+                  >
+                    <HeartOff size={16} />
+                    お気に入り解除
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="ghost-btn favorite-remove-btn"
+                    onClick={() => handleAddFavorites(selected.id)}
+                  >
+                    <Heart size={16} />
+                    お気に入り登録
+                  </button>
+                )}
+
+                <button type="button" className="reserve-btn">
                   <CalendarCheck size={16} />
                   予約する
                 </button>

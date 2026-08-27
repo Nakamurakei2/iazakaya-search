@@ -183,7 +183,7 @@ export default function ContactPage() {
           <h1 className="brand-title">お問い合わせ</h1>
         </div>
         <p className="brand-sub">
-          ご予約に関するご質問や、店舗掲載のご相談などお気軽にどうぞ
+          サイトのご意見などございましたらご気軽にどうぞ
         </p>
       </header>
 
@@ -201,7 +201,7 @@ export default function ContactPage() {
               id="name"
               type="text"
               className="form-input"
-              placeholder="夜 横太郎"
+              placeholder="山田 太郎"
               value={form.name}
               onChange={(e) => updateField("name", e.target.value)}
               aria-invalid={!!errors.name}
@@ -230,7 +230,7 @@ export default function ContactPage() {
                 id="email"
                 type="email"
                 className="form-input"
-                placeholder="you@example.com"
+                placeholder="example@example.com"
                 value={form.email}
                 onChange={(e) => updateField("email", e.target.value)}
                 aria-invalid={!!errors.email}

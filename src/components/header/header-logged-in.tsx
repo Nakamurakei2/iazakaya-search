@@ -6,7 +6,6 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 const NAV_LINKS = [
-  { label: "プロフィール", href: "/profile" },
   { label: "お気に入り登録", href: "/favorites" },
   { label: "問い合わせ", href: "/contact" },
 ];
@@ -33,7 +32,12 @@ export function HeaderLoggedIn() {
 
   return (
     <header className="header-main">
-      <div className={menuOpen ? "overlay" : ""}></div>
+      <div
+        className={menuOpen ? "overlay" : ""}
+        onClick={() => {
+          setMenuOpen(false);
+        }}
+      ></div>
       <div className="header-contents">
         <div className="header__bar">
           <div className="header__actions">

@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS users(
 
 CREATE TABLE IF NOT EXISTS favorites(
   user_id INTEGER NOT NULL,
-  restaurant_id INTEGER NOT NULL,
+  restaurant_id VARCHAR(100) NOT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
   PRIMARY KEY (user_id, restaurant_id),
