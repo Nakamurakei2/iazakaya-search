@@ -41,7 +41,6 @@ export default function SignupForm() {
         }
         return;
       }
-      console.log("新規登録したユーザー", data.name);
       // 成功メッセージ表示
       toast.success(data.message);
       router.push("/");

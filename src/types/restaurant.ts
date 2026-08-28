@@ -62,6 +62,8 @@ export type RestaurantType = {
     name: string;
     code: string;
   };
+  created_at: string;
+  name_kana: string;
 };
 
 export type ShopsType = RestaurantType & {

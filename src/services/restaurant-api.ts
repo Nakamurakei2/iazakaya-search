@@ -62,7 +62,6 @@ export const handleLocationSearch = async (props: Props) => {
     const results_available = data.results_available;
     setTotalRestaurants(results_available); // 検索結果の全件数
     const shops: RestaurantType[] = data.shop;
-    console.log("shops!!", shops);
 
     // APIから取得した店舗データを現在地から近い順に並び替える
     // もしかするとこの辺いらないかも→API側でsort機能があるので
@@ -72,7 +71,6 @@ export const handleLocationSearch = async (props: Props) => {
         distanceKm: calculateDistance(latitude, longitude, shop.lat, shop.lng),
       }))
       .sort((a, b) => a.distanceKm - b.distanceKm);
-    console.log("sorted", sorted);
 
     // ソート済みの店舗データをstateに格納
     setShops(sorted);

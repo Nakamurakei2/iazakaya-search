@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import Link from "next/link";
 import {
   HeartOff,
@@ -18,7 +18,7 @@ import { GENRE_STYLE, RestaurantType } from "@/types/restaurant";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
-type SortKey = "recent" | "name"; // DBのcreated_atを使用する
+type SortKey = "recent" | "name";
 type FavoriteFromProps = {
   data: RestaurantType[];
 };
@@ -40,6 +40,23 @@ export default function FavoriteForm(data: FavoriteFromProps) {
   useEffect(() => {
     if (selected && dialogRef.current) dialogRef.current.focus();
   }, [selected]);
+
+  // 並び替え後のレストラン
+  const sortFavorites = (favorites: RestaurantType[], sortKey: SortKey) => {
+    return [...favorites].sort((a, b) => {
+      if (sortKey === "name") {
+        return a.name_kana.localeCompare(b.name_kana, "ja");
+      }
+
+      if (!a.created_at) return 1;
+      if (!b.created_at) return -1;
+
+      return (
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+    });
+  };
+  const sortedFavorites = sortFavorites(favorites, sortKey);
 
   const handleRemoveFavorite = () => {
     // 削除確認ダイアログを表示させる
@@ -136,7 +153,7 @@ export default function FavoriteForm(data: FavoriteFromProps) {
           </div>
         )}
 
-        {favorites.map((shop) => {
+        {sortedFavorites.map((shop) => {
           const style = GENRE_STYLE[shop.genre.code] || { c: "#8C6A4E" };
           return (
             <div key={shop.id} className="card favorite-card">
