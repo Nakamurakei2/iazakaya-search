@@ -69,7 +69,6 @@ export async function POST(req: NextRequest, context: ContextType) {
  */
 export const DELETE = async (req: NextRequest, context: ContextType) => {
   const { restaurantId } = await context.params;
-  console.log("restaurantId", restaurantId);
 
   // Cookieの確認
   const cookieStore = await cookies();

@@ -27,10 +27,10 @@ export const fetchFavorites = async () => {
       return [];
     }
     const data = await res.json();
-    const favorites: FavoriteItem[] = data.favoriteRestaurants;
+    const favorites = data.favoriteRestaurants;
 
     const restaurants = await Promise.all(
-      favorites.map(async ({ restaurant_id }) => {
+      favorites.map(async ({ restaurant_id, created_at }) => {
         const res = await fetch(
           `${apiBaseUrl}&id=${restaurant_id}&format=json`,
         );
@@ -38,12 +38,16 @@ export const fetchFavorites = async () => {
         if (!res.ok) {
           return null;
         }
+
         const data = await res.json();
-        return data.results.shop;
+
+        return {
+          ...data.results.shop[0],
+          created_at,
+        };
       }),
     );
-
-    return restaurants.filter(Boolean).flat(); // 有効なデータのみ返す（nullやundefinedは省く）
+    return restaurants.filter(Boolean);
   } catch (e: unknown) {
     console.error("e", e);
 

@@ -74,8 +74,6 @@ export default function ContactConfirmPage(props: Props) {
     } finally {
       setIsSubmitting(false);
     }
-
-    console.log("submit contact");
   };
 
   return (

@@ -10,7 +10,7 @@ export async function GET(req: NextResponse) {
 
   if (userId) {
     try {
-      const query = `SELECT restaurant_id FROM favorites WHERE user_id = $1`;
+      const query = `SELECT restaurant_id, created_at FROM favorites WHERE user_id = $1 ORDER BY created_at DESC`;
       const result = await pool.query(query, [userId]);
       const rows = result.rows;
 
