@@ -18,7 +18,7 @@ import { GENRE_STYLE, RestaurantType } from "@/types/restaurant";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
-type SortKey = "recent" | "name";
+type SortKey = "recent" | "name"; // DBのcreated_atを使用する
 type FavoriteFromProps = {
   data: RestaurantType[];
 };
