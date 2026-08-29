@@ -1,6 +1,8 @@
 import { pool } from "@/lib/pool";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
 interface DatabaseError extends Error {
   code: string;
@@ -19,17 +21,28 @@ function isDatabaseError(error: unknown): error is DatabaseError {
 export async function POST(req: NextRequest) {
   try {
     const { username, email, password } = await req.json();
+    const hashedPassword = await bcrypt.hash(password, 12);
     const query = `
-    INSERT INTO users (name, email, password)
-    VALUES ($1, $2, $3)
-    RETURNING id, name, email
+      INSERT INTO users (name, email, password)
+      VALUES ($1, $2, $3)
+      RETURNING id, name, email
     `;
-    const result = await pool.query(query, [username, email, password]);
-    const token = result.rows[0].id; // jwtなどで署名する
-    // Cookieを管理するオブジェクトを取得
-    const cookieStore = await cookies();
+    const result = await pool.query(query, [username, email, hashedPassword]);
+    const user = result.rows[0];
 
-    // set Cookie
+    // JWT発行
+    const token = jwt.sign(
+      {
+        sub: String(user.id),
+      },
+      process.env.JWT_SECRET!,
+      {
+        expiresIn: "7d",
+      },
+    );
+
+    // Cookie登録
+    const cookieStore = await cookies();
     cookieStore.set("auth_token", token, {
       httpOnly: true, // セキュリティ対策（JSからのアクセス禁止）
       secure: process.env.NODE_ENV === "production", // 本番環境のみ送信

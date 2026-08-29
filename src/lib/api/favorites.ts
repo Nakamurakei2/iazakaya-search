@@ -11,25 +11,14 @@ export const fetchFavorites = async () => {
   try {
     const cookieStore = await cookies();
     const allCookies = cookieStore.toString();
-    const userId = cookieStore.get("auth_token")?.value;
 
-    if (!userId) return [];
-
-    // offsetは1、Limitは20で固定
-    const params = new URLSearchParams({
-      limit: "20",
-      offset: "0",
-    });
-    const res = await fetch(
-      `http://localhost:3000/api/restaurants/favorites?${params.toString()}`,
-      {
-        method: "GET",
-        headers: {
-          Cookie: allCookies,
-        },
-        cache: "no-store",
+    const res = await fetch(`http://localhost:3000/api/restaurants/favorites`, {
+      method: "GET",
+      headers: {
+        Cookie: allCookies,
       },
-    );
+      cache: "no-store",
+    });
 
     if (!res.ok) {
       return [];

@@ -1,37 +1,26 @@
-"use client";
+import { cookies } from "next/headers";
+import ContactFormRootPage from "./contact-form";
+import { redirect } from "next/navigation";
+import jwt from "jsonwebtoken";
 
-import ContactConfirmPage from "@/components/confirm/confirm";
-import ContactFormPage, { FormState } from "@/components/contact/contact";
-import { useState } from "react";
+// server component
+export default async function ContactPage() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("auth_token")?.value;
 
-export const confirmInputInitData = {
-  name: "",
-  email: "",
-  phone: "",
-  type: "",
-  subject: "",
-  message: "",
-};
+  // トークンがない場合はルートディレクトリに遷移
+  if (!token) {
+    redirect("/");
+  }
 
-export default function ContactPage() {
-  const [isEntered, setIsEntered] = useState(false); // 問い合わせページに入力済みかどうか
-  const [inputData, setInputData] = useState<FormState>(confirmInputInitData); // 問い合わせ内容情報
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!);
+    if (decoded && decoded.sub) {
+      <ContactFormRootPage />;
+    }
+  } catch (e: unknown) {
+    console.error(e);
+  }
 
-  return (
-    <>
-      {isEntered ? (
-        <ContactConfirmPage
-          setIsEntered={setIsEntered}
-          inputData={inputData}
-          setInputData={setInputData}
-        />
-      ) : (
-        <ContactFormPage
-          setIsEntered={setIsEntered}
-          inputData={inputData}
-          setInputData={setInputData}
-        />
-      )}
-    </>
-  );
+  redirect("/");
 }

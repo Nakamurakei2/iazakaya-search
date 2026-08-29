@@ -94,12 +94,10 @@ export default function IzakayaSearchApp() {
     setSelectedGenres([]);
   };
 
-  // TODO: 「この条件で検索」押下時に selectedGenres を使って実際の検索処理と連携する
   const handleApplyAdvancedSearch = () => {
     setIsAdvancedOpen(false);
   };
 
-  // TODO: 「居酒屋のみで絞り込む」押下時に selectedGenres を使って実際の検索処理と連携する
   const handleQuickIzakayaFilter = () => {
     setSelectedGenres([IZAKAYA_GENRE_CODE]);
   };
@@ -222,6 +220,15 @@ export default function IzakayaSearchApp() {
     // 詳細検索窓を閉じる
     setIsAdvancedOpen(false);
   };
+
+  /**
+   * 「予約する」ボタン押下時処理
+   */
+  const handleReserveButtonClick = async (url: string) => {
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
+
+  console.log(selected);
 
   return (
     <>
@@ -680,16 +687,7 @@ export default function IzakayaSearchApp() {
                   <div className="info-row">
                     <dt className="info-label">
                       <Wallet size={13} className="meta-icon" />
-                      店名
-                    </dt>
-
-                    <dd className="info-value">{selected.name}</dd>
-                  </div>
-
-                  <div className="info-row">
-                    <dt className="info-label">
-                      <Wallet size={13} className="meta-icon" />
-                      店名
+                      予算
                     </dt>
 
                     <dd className="info-value">{selected.budget.name}</dd>
@@ -727,7 +725,11 @@ export default function IzakayaSearchApp() {
                   </button>
                 )}
 
-                <button type="button" className="reserve-btn">
+                <button
+                  type="button"
+                  className="reserve-btn"
+                  onClick={() => handleReserveButtonClick(selected.urls.pc)}
+                >
                   <CalendarCheck size={16} />
                   予約する
                 </button>

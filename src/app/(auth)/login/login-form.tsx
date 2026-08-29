@@ -93,9 +93,13 @@ export default function LoginForm() {
                 id="login-password"
                 type="password"
                 className="auth__input"
-                placeholder="8文字以上"
+                placeholder="5文字以上"
                 {...register("password", {
                   required: "パスワードを入力してください",
+                  minLength: {
+                    value: 5,
+                    message: "パスワードは5文字以上で入力してください",
+                  },
                 })}
               />
             </div>

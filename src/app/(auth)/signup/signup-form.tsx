@@ -123,9 +123,13 @@ export default function SignupForm() {
                   id="signup-password"
                   type="password"
                   className="auth__input"
-                  placeholder="8文字以上"
+                  placeholder="5文字以上"
                   {...register("password", {
                     required: "パスワードを入力してください",
+                    minLength: {
+                      value: 5,
+                      message: "パスワードは5文字以上で入力してください",
+                    },
                   })}
                 />
               </div>
@@ -149,6 +153,10 @@ export default function SignupForm() {
                   placeholder="もう一度入力してください"
                   {...register("confirmPassword", {
                     required: "確認用パスワードを入力してください",
+                    minLength: {
+                      value: 5,
+                      message: "パスワードは5文字以上で入力してください",
+                    },
                   })}
                 />
               </div>
