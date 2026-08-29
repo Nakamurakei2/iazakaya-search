@@ -248,7 +248,6 @@ export const handlePaginateNext = async (props: PaginationProps) => {
  */
 export const handlePaginatePrevious = async (props: PaginationProps) => {
   const {
-    page,
     pageSize,
     startPage,
     currentLocationData,
@@ -392,6 +391,42 @@ export const handleAddFavoritesButtonClick = async (
     toast.success(data.message);
 
     return data.restaurant_id;
+  } catch (e: unknown) {
+    console.error("e", e);
+
+    if (e instanceof Error) {
+      toast.error(e.message);
+    }
+  }
+};
+
+/**
+ * お気に入り解除ボタン押下時処理
+ */
+export const handleDeleteFavoritesButton = async (
+  props: AddFavoritesButtonProps,
+) => {
+  const { restaurantId } = props;
+
+  try {
+    const res = await fetch(`/api/restaurants/${restaurantId}/favorites`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ restaurantId }),
+      // signal
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      toast.error(data.message);
+      return;
+    }
+    toast.success(data.message);
+    console.log("data", data);
+
+    // return data.restaurant_id;
   } catch (e: unknown) {
     console.error("e", e);
 

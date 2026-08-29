@@ -15,19 +15,27 @@ export const fetchFavorites = async () => {
 
     if (!userId) return [];
 
-    const res = await fetch("http://localhost:3000/api/restaurants/favorites", {
-      method: "GET",
-      headers: {
-        Cookie: allCookies,
-      },
-      cache: "no-store",
+    // offsetは1、Limitは20で固定
+    const params = new URLSearchParams({
+      limit: "20",
+      offset: "0",
     });
+    const res = await fetch(
+      `http://localhost:3000/api/restaurants/favorites?${params.toString()}`,
+      {
+        method: "GET",
+        headers: {
+          Cookie: allCookies,
+        },
+        cache: "no-store",
+      },
+    );
 
     if (!res.ok) {
       return [];
     }
     const data = await res.json();
-    const favorites = data.favoriteRestaurants;
+    const favorites: FavoriteItem[] = data.favoriteRestaurants;
 
     const restaurants = await Promise.all(
       favorites.map(async ({ restaurant_id, created_at }) => {
