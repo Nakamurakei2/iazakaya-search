@@ -25,7 +25,7 @@ export function HeaderLoggedIn() {
       toast.error(data.message);
     }
 
-    toast.message(data.message);
+    toast.success(data.message);
     // ログイン画面へ遷移
     router.push("/login");
   };

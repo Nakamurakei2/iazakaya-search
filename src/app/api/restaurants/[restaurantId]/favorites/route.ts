@@ -1,6 +1,7 @@
 import { pool } from "@/lib/pool";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
 
 type ContextType = {
   params: Promise<{ restaurantId: string }>;
@@ -23,8 +24,16 @@ export async function POST(req: NextRequest, context: ContextType) {
     const { restaurantId } = await context.params;
     // ログイン中のユーザーIDを取得する
     const cookieStore = await cookies();
-    const token = cookieStore.get("auth_token");
-    const userId = token?.value;
+    const token = cookieStore.get("auth_token")?.value;
+
+    if (!token) {
+      return NextResponse.json(
+        { message: "認証情報が不正です" },
+        { status: 401 },
+      );
+    }
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!);
+    const userId = decoded.sub;
 
     if (userId) {
       // user_idとrestaurant_idを登録する
@@ -58,10 +67,17 @@ export async function POST(req: NextRequest, context: ContextType) {
           { status: 409 },
         );
       }
+    } else {
+      return NextResponse.json(
+        {
+          message: "意図しないエラーが発生しました。",
+        },
+        {
+          status: 500,
+        },
+      );
     }
   }
-
-  return NextResponse.json({ message: "test" });
 }
 
 /**
@@ -72,8 +88,19 @@ export async function DELETE(req: NextRequest, context: ContextType) {
 
   // Cookieの確認
   const cookieStore = await cookies();
-  const token = cookieStore.get("auth_token");
-  const userId = token?.value;
+  const token = cookieStore.get("auth_token")?.value;
+
+  if (!token) {
+    return NextResponse.json(
+      {
+        message: "認証情報が不正です",
+      },
+      { status: 401 },
+    );
+  }
+
+  const decoded = jwt.verify(token, process.env.JWT_SECRET!);
+  const userId = decoded.sub;
 
   if (userId) {
     try {

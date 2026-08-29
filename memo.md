@@ -208,3 +208,21 @@ SELECT regin, total_sales
 FROM regional_sales
 WHERE total_sales > 1000;
 ```
+
+## ページネーション実装例
+SQLでページネーションを実装するには、主に、「LIMIT/OFFSET形式」と「カーソル形式」の２つの方法がある。
+
+### 1. Limit/Offset形式
+多くのWebサイトで使われている最も直感的な方法で、
+・「1ページあたり20件、３ページ目を表示（41件目から取得）」といった処理を、取得件数（Limit）とスキップ件数（Offset）で制御する。
+
+- SQL例
+１ページに20件表示し、３ページ目（41~60件目）を取得する場合
+```
+SELECT *
+FROM posts
+ORDER BY created_at DESC
+LIMIT 20 OFFSET 40;
+```
+
+### 2. カーソル形式（キーセットページネーション）

@@ -1,12 +1,22 @@
 import { pool } from "@/lib/pool";
 import { NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
 
 /**
  * お気に入り取得API
  */
 export async function GET(req: NextResponse) {
-  const token = req.cookies.get("auth_token");
-  const userId = token?.value;
+  const token = req.cookies.get("auth_token")?.value;
+
+  if (!token) {
+    return NextResponse.json(
+      { message: "認証情報が不正です" },
+      { status: 401 },
+    );
+  }
+
+  const decoded = jwt.verify(token, process.env.JWT_SECRET!);
+  const userId = decoded.sub;
 
   if (userId) {
     try {
