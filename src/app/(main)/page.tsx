@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, FormEvent } from "react";
+import { useState, useRef, FormEvent } from "react";
 import {
   Search,
   MapPin,
@@ -16,6 +16,7 @@ import {
   ChevronDown,
   HeartOff,
   Heart,
+  AlertTriangle,
 } from "lucide-react";
 import { Pagination } from "@/components/pagination";
 import {
@@ -26,7 +27,14 @@ import {
   handlePaginatePrevious,
   handleSearch,
 } from "@/services/restaurant-api";
-import { GENRE_STYLE, Location, ShopsType } from "@/types/restaurant";
+import {
+  FavoriteItem,
+  GENRE_STYLE,
+  Location,
+  RestaurantType,
+  ShopsType,
+} from "@/types/restaurant";
+import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
 const pageSize_OPTIONS = [5, 10, 20, 30] as const;
@@ -47,6 +55,7 @@ const IZAKAYA_GENRE_CODE = "G001";
 
 export default function IzakayaSearchApp() {
   const router = useRouter();
+
   const [stationName, setStationName] = useState<string>("");
   const [shops, setShops] = useState<ShopsType[]>(); // 表示用レストランデータ(距離含む)
   const [page, setPage] = useState<number>(1); // ページネーション用の現在どのページを表す
@@ -60,26 +69,16 @@ export default function IzakayaSearchApp() {
   const [startPage, setStartPage] = useState(1); // 検索の開始位置
   const [currentLocationData, setCurrentLocationData] =
     useState<Location | null>(null); // 現在地格納
-
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]); // お気に入り登録
-
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
+  const [confirmTarget, setConfirmTarget] = useState<RestaurantType | null>(
+    null,
+  ); // 削除確認ダイアログ
+  const confirmDialogRef = useRef<HTMLDivElement>(null);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const selected = shops?.find((s) => s.id === selectedId) || null;
-
-  useEffect(() => {
-    setPage(1);
-  }, [stationName]);
-
-  useEffect(() => {
-    if (page > totalRestaurants) setPage(totalRestaurants);
-  }, [totalRestaurants, page]);
-
-  useEffect(() => {
-    if (selected && dialogRef.current) dialogRef.current.focus();
-  }, [selected]);
 
   const toggleGenre = (code: string) => {
     setSelectedGenres((prev) =>
@@ -138,6 +137,90 @@ export default function IzakayaSearchApp() {
     if (restaurantId) setFavoriteIds((prev) => [...prev, restaurantId]);
 
     setSelectedId(""); // 詳細ダイアログ閉じる
+  };
+
+  /**
+   * 「キャンセル」ボタン押下時処理
+   */
+  const cancelRemoveFavorite = () => {
+    setConfirmTarget(null);
+  };
+
+  /**
+   * 「お気に入り解除」ボタン押下時処理
+   */
+  const handleRemoveFavorites = () => {
+    setConfirmTarget(selected);
+  };
+
+  /**
+   * 「削除する」ボタン押下時処理
+   */
+  const confirmRemoveFavorite = async (
+    target: RestaurantType,
+  ): Promise<void> => {
+    const { id } = target;
+    try {
+      const res = await fetch(`/api/restaurants/${id}/favorites`, {
+        method: "DELETE",
+        credentials: "include",
+        cache: "no-store",
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.message);
+        return;
+      }
+      toast.success(data.message); // 店名込みで表示させた方が良い？
+      setConfirmTarget(null); // モーダル閉じる
+      setSelectedId(""); // 詳細モーダルを閉じる
+
+      router.refresh(); // サーバーへ最新データを取得するリクエストを送り更新する
+    } catch (e: unknown) {
+      console.error("e", e);
+    }
+  };
+
+  /**
+   * 「現在地から検索」ボタン押下時処理
+   */
+  const handleLocationButtonClick = async () => {
+    setStartPage(1);
+
+    handleLocationSearch({
+      pageSize,
+      selectedGenres,
+      setStartPage,
+      setIsLocating,
+      setLocationNotice,
+      setCurrentLocationData,
+      setTotalRestaurants,
+      setShops,
+      setStationName,
+      setPage,
+    });
+
+    // お気に入り登録したレストランID取得
+    try {
+      const res = await fetch("/api/restaurants/favorites", {
+        method: "GET",
+      });
+      const datas = await res.json();
+      if (!res.ok) {
+        return;
+      }
+      const favoriteRestaurants: FavoriteItem[] = datas.favoriteRestaurants;
+      const restaurantIds = favoriteRestaurants.map((data) => {
+        return data.restaurant_id;
+      });
+
+      setFavoriteIds(restaurantIds);
+    } catch (e: unknown) {
+      console.error("e", e);
+    }
+
+    // 詳細検索窓を閉じる
+    setIsAdvancedOpen(false);
   };
 
   return (
@@ -211,25 +294,7 @@ export default function IzakayaSearchApp() {
             </div>
 
             <button
-              onClick={() => {
-                setStartPage(1);
-
-                handleLocationSearch({
-                  pageSize,
-                  selectedGenres,
-                  setStartPage,
-                  setIsLocating,
-                  setLocationNotice,
-                  setCurrentLocationData,
-                  setTotalRestaurants,
-                  setShops,
-                  setStationName,
-                  setPage,
-                });
-
-                // 詳細検索窓を閉じる
-                setIsAdvancedOpen(false);
-              }}
+              onClick={() => handleLocationButtonClick()}
               className="location-btn"
               disabled={isLocating}
             >
@@ -490,7 +555,6 @@ export default function IzakayaSearchApp() {
             totalRestaurants={Math.ceil(totalRestaurants / pageSize)}
             handlePaginatePrevious={() =>
               handlePaginatePrevious({
-                page,
                 pageSize,
                 startPage,
                 currentLocationData,
@@ -642,13 +706,12 @@ export default function IzakayaSearchApp() {
                 </dl>
               </div>
 
-              {/* ログインされてない場合は表示しない */}
               <div className="dialog-footer favorite-dialog-footer">
                 {favoriteIds.includes(selected.id) ? (
                   <button
                     type="button"
                     className="ghost-btn favorite-remove-btn"
-                    // onClick={() => handleRemoveFavorites(selected.id)}
+                    onClick={() => handleRemoveFavorites()}
                   >
                     <HeartOff size={16} />
                     お気に入り解除
@@ -667,6 +730,50 @@ export default function IzakayaSearchApp() {
                 <button type="button" className="reserve-btn">
                   <CalendarCheck size={16} />
                   予約する
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {confirmTarget && (
+          <div className="confirm-overlay" onClick={cancelRemoveFavorite}>
+            <div
+              className="confirm-dialog"
+              role="alertdialog"
+              aria-modal="true"
+              aria-labelledby="confirm-title"
+              aria-describedby="confirm-body"
+              tabIndex={-1}
+              ref={confirmDialogRef}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="confirm-icon-wrap" aria-hidden="true">
+                <AlertTriangle size={22} />
+              </div>
+
+              <h2 id="confirm-title" className="confirm-title">
+                お気に入りを解除しますか？
+              </h2>
+              <p id="confirm-body" className="confirm-body">
+                「{confirmTarget.name}」をお気に入りから削除します。
+              </p>
+
+              <div className="confirm-actions">
+                <button
+                  type="button"
+                  className="confirm-cancel-btn"
+                  onClick={cancelRemoveFavorite}
+                >
+                  キャンセル
+                </button>
+                <button
+                  type="button"
+                  className="confirm-danger-btn"
+                  onClick={() => confirmRemoveFavorite(confirmTarget)}
+                >
+                  <HeartOff size={16} />
+                  削除する
                 </button>
               </div>
             </div>

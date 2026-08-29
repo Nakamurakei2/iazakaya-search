@@ -106,7 +106,6 @@ export type SearchProps = {
  * ページネーションのPropsの型定義
  */
 export type PaginationProps = {
-  page?: number;
   pageSize: number;
   startPage: number;
   currentLocationData: Location | null;
@@ -129,7 +128,7 @@ export type PaginationButtonProps = {
 };
 
 /**
- * お気に入り登録ボタン押下時のPropsの型定義
+ * レストランIDの型定義
  */
 export type AddFavoritesButtonProps = {
   restaurantId: string;
@@ -140,6 +139,7 @@ export type AddFavoritesButtonProps = {
  */
 export interface FavoriteItem {
   restaurant_id: string;
+  created_at?: string;
 }
 
 /**

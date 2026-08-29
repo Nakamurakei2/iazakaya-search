@@ -67,7 +67,7 @@ export async function POST(req: NextRequest, context: ContextType) {
 /**
  * お気に入り削除API
  */
-export const DELETE = async (req: NextRequest, context: ContextType) => {
+export async function DELETE(req: NextRequest, context: ContextType) {
   const { restaurantId } = await context.params;
 
   // Cookieの確認
@@ -98,4 +98,4 @@ export const DELETE = async (req: NextRequest, context: ContextType) => {
   } else {
     // 未ログイン
   }
-};
+}
