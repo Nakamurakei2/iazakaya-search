@@ -9,12 +9,20 @@ export async function GET(req: NextRequest) {
   const restaurant_id = req.nextUrl.searchParams.get("restaurant_id");
   try {
     const res = await fetch(`${apiBaseUrl}&id=${restaurant_id}&format=json`);
-    const data = await res.json();
-
-    const shops = data.results.shop;
     if (!res.ok) {
-      return null;
+      if (!res.ok) {
+        return NextResponse.json(
+          {
+            message: "レストラン情報の取得に失敗しました。",
+          },
+          {
+            status: res.status,
+          },
+        );
+      }
     }
+    const data = await res.json();
+    const shops = data.results.shop;
     return NextResponse.json(
       {
         message: "データの取得に成功しました。",

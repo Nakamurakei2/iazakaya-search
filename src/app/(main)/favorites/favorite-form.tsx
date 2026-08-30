@@ -14,7 +14,7 @@ import {
   Clock,
   AlertTriangle,
 } from "lucide-react";
-import { GENRE_STYLE, RestaurantType } from "@/types/restaurant";
+import { FavoriteItem, GENRE_STYLE, RestaurantType } from "@/types/restaurant";
 import { toast } from "sonner";
 import { Pagination } from "@/components/pagination";
 import { useRouter } from "next/navigation";
@@ -484,7 +484,7 @@ const fetchFavoritesPage = async (
       return null;
     }
 
-    const favoriteRestaurants = data.favoriteRestaurants;
+    const favoriteRestaurants: FavoriteItem[] = data.favoriteRestaurants;
     const restaurants = await Promise.all(
       favoriteRestaurants.map(async ({ restaurant_id, created_at }) => {
         const detailParams = new URLSearchParams({ restaurant_id });

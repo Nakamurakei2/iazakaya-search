@@ -1,6 +1,7 @@
 import { pool } from "@/lib/pool";
 import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
+import { FavoriteItem } from "@/types/restaurant";
 
 /**
  * お気に入り取得API
@@ -29,8 +30,12 @@ export async function GET(req: NextRequest) {
         WHERE user_id = $1
         ORDER BY created_at DESC
       `;
+      const resolvedUserId =
+        typeof userId === "function"
+          ? (userId as () => string)()
+          : String(userId);
 
-      const params: (string | number)[] = [userId];
+      const params: (string | number)[] = [resolvedUserId];
 
       if (limit !== null && offset !== null) {
         query += `
@@ -42,13 +47,12 @@ export async function GET(req: NextRequest) {
       }
 
       const countQuery = `SELECT COUNT(*) FROM favorites WHERE user_id = $1`;
-
       const [result, countResult] = await Promise.all([
         pool.query(query, [userId, limit, offset]),
         pool.query(countQuery, [userId]),
       ]);
 
-      const rows = result.rows;
+      const rows: FavoriteItem[] = result.rows;
       return NextResponse.json(
         {
           mesasge: "お気に入り登録したレストランの情報の取得に成功しました！",
