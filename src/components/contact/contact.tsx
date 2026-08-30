@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useMemo, Dispatch, SetStateAction } from "react";
+import { useState, Dispatch, SetStateAction } from "react";
 import Link from "next/link";
-import { Loader2, CheckCircle2, AlertCircle, ArrowLeft } from "lucide-react";
+import { CheckCircle2, AlertCircle, ArrowLeft } from "lucide-react";
 
 // ---------------------------------------------------------------------------
 // お問い合わせ種別
@@ -40,7 +40,6 @@ export default function ContactFormPage(props: Props) {
 
   const [form, setForm] = useState<FormState>(inputData);
   const [errors, setErrors] = useState<FormErrors>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
   const updateField = <K extends keyof FormState>(

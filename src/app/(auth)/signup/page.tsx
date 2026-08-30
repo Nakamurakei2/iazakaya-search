@@ -12,23 +12,23 @@ export default async function SignupPage() {
     return <SignupForm />;
   }
 
+  let decoded: jwt.JwtPayload;
+
   // 2. トークンがある場合は、有効なものか検証する
   try {
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET!,
-    ) as jwt.JwtPayload;
-
-    // ユーザーIDが正しく入っていれば「ログイン済み」とみなし、トップへリダイレクト
-    if (decoded && decoded.sub) {
-      redirect("/");
-    }
+    decoded = jwt.verify(token, process.env.JWT_SECRET!) as jwt.JwtPayload;
   } catch (e: unknown) {
     // 期限切れや改ざんなど、検証に失敗した場合
     console.error(
       "サインアップ画面でのJWT検証失敗（スルーして画面を表示）:",
       e,
     );
+
+    return <SignupForm />;
+  }
+
+  if (decoded) {
+    redirect("/");
   }
 
   // トークンが不正だった場合は、ここへ流れて画面が表示される

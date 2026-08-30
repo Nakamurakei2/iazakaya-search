@@ -12,14 +12,17 @@ export default async function LoginPage() {
     return <LoginForm />;
   }
 
+  let decoded: jwt.JwtPayload;
+
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!);
-    if (decoded && decoded.sub) {
-      redirect("/");
-    }
+    decoded = jwt.verify(token, process.env.JWT_SECRET!) as jwt.JwtPayload;
   } catch (e: unknown) {
     // 期限切れや改ざんなど、検証に失敗した場合
     console.error("ログイン画面でのJWT検証失敗（スルーして画面を表示）:", e);
+    return <LoginForm />;
+  }
+  if (decoded) {
+    redirect("/");
   }
 
   return <LoginForm />;

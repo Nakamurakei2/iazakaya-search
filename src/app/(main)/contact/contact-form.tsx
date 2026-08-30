@@ -20,11 +20,7 @@ export default function ContactFormRootPage() {
   return (
     <>
       {isEntered ? (
-        <ContactConfirmPage
-          setIsEntered={setIsEntered}
-          inputData={inputData}
-          setInputData={setInputData}
-        />
+        <ContactConfirmPage setIsEntered={setIsEntered} inputData={inputData} />
       ) : (
         <ContactFormPage
           setIsEntered={setIsEntered}

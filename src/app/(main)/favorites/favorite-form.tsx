@@ -16,17 +16,23 @@ import {
 } from "lucide-react";
 import { GENRE_STYLE, RestaurantType } from "@/types/restaurant";
 import { toast } from "sonner";
+import { Pagination } from "@/components/pagination";
 import { useRouter } from "next/navigation";
 
 type SortKey = "recent" | "name";
 type FavoriteFromProps = {
   data: RestaurantType[];
+  totalFavorites: string;
 };
 
-export default function FavoriteForm(data: FavoriteFromProps) {
-  const router = useRouter();
-  const favorites = data.data;
+const LIMIT = 20;
 
+export default function FavoriteForm(props: FavoriteFromProps) {
+  const { data, totalFavorites } = props;
+
+  const router = useRouter();
+
+  const [favorites, setFavorites] = useState<RestaurantType[]>(data);
   const [selectedId, setSelectedId] = useState<string>("");
   const [sortKey, setSortKey] = useState<SortKey>("recent");
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -34,8 +40,10 @@ export default function FavoriteForm(data: FavoriteFromProps) {
     null,
   ); // 削除確認ダイアログ
   const confirmDialogRef = useRef<HTMLDivElement>(null);
-
+  const [currentPage, setCurrentPage] = useState<number>(1);
   const selected = favorites.find((s) => s.id === selectedId) || null;
+
+  const paginateTotalPage = Math.ceil(Number(totalFavorites) / LIMIT); // ページネーションの合計ページ数
 
   useEffect(() => {
     if (selected && dialogRef.current) dialogRef.current.focus();
@@ -83,19 +91,74 @@ export default function FavoriteForm(data: FavoriteFromProps) {
         credentials: "include",
         cache: "no-store",
       });
-      const data = await res.json();
+      const resData = await res.json();
       if (!res.ok) {
-        toast.error(data.message);
+        toast.error(resData.message);
         return;
       }
-      toast.success(data.message); // 店名込みで表示させた方が良い？
+      toast.success(resData.message); // 店名込みで表示させた方が良い？
       setConfirmTarget(null); // モーダル閉じる
       setSelectedId(""); // 詳細モーダルを閉じる
 
-      router.refresh(); // サーバーへ最新データを取得するリクエストを送り更新する
+      // ★ 併せて、削除した店舗をこの場で favorites からも取り除く
+      //   （router.refresh() 完了までのタイムラグで一覧に残って見えるのを防ぐ）
+      setFavorites((prev) => prev.filter((f) => f.id !== id));
+      router.refresh();
     } catch (e: unknown) {
       console.error("e", e);
     }
+  };
+
+  /**
+   * ページネーションの前ボタン押下時処理
+   */
+  const handlePaginatePrevious = async () => {
+    // 1ページ目より前には戻れない
+    if (currentPage <= 1) return;
+
+    const prevPage = currentPage - 1;
+    const offset = LIMIT * (prevPage - 1);
+
+    const prevFavorites = await fetchFavoritesPage(offset);
+    if (prevFavorites === null) return; // エラー時は toast 済みなので何もしない
+
+    setFavorites(prevFavorites);
+    setCurrentPage(prevPage);
+    window.scrollTo({ top: 0, behavior: "instant" });
+  };
+
+  /**
+   * ページネーション次ボタン押下時処理
+   */
+  const handlePaginateNext = async () => {
+    const nextPage = currentPage + 1;
+    const offset = LIMIT * currentPage; // = LIMIT * (nextPage - 1)
+
+    const nextFavorites = await fetchFavoritesPage(offset);
+    if (nextFavorites === null) return; // エラー時は toast 済みなので何もしない
+
+    setFavorites(nextFavorites);
+    setCurrentPage(nextPage);
+    window.scrollTo({ top: 0, behavior: "instant" });
+  };
+
+  /**
+   * ページネーションのボタン押下時処理
+   */
+  const handlePaginateButtonClick = async (num: number) => {
+    const nextFavorites = await fetchFavoritesPage((num - 1) * LIMIT);
+    if (nextFavorites === null) return; // エラー時は toast 済みなので何もしない
+
+    setFavorites(nextFavorites);
+    setCurrentPage(num);
+    window.scrollTo({ top: 0, behavior: "instant" });
+  };
+
+  /**
+   * 「予約する」ボタン押下時処理
+   */
+  const handleReserveButtonClick = (url: string) => {
+    window.open(url, "_blank", "noopener,noreferrer");
   };
 
   return (
@@ -113,7 +176,7 @@ export default function FavoriteForm(data: FavoriteFromProps) {
 
       <div className="display-row">
         <div className="result-meta margin-none">
-          <span>{favorites.length}件 保存中</span>
+          <span>{totalFavorites}件 保存中</span>
         </div>
 
         <div className="sort-select-wrap">
@@ -207,15 +270,6 @@ export default function FavoriteForm(data: FavoriteFromProps) {
                   </span>
                 </div>
               </button>
-
-              {/* <button
-                type="button"
-                className="favorite-heart-btn"
-                onClick={() => handleRemoveFavorite(shop)}
-                aria-label={`${shop.name}をお気に入りから削除`}
-              >
-                <Heart size={18} fill="#E2532B" />
-              </button> */}
             </div>
           );
         })}
@@ -323,7 +377,11 @@ export default function FavoriteForm(data: FavoriteFromProps) {
                 <HeartOff size={16} />
                 お気に入り解除
               </button>
-              <button type="button" className="reserve-btn">
+              <button
+                type="button"
+                className="reserve-btn"
+                onClick={() => handleReserveButtonClick(selected.urls.pc)}
+              >
                 <CalendarCheck size={16} />
                 予約する
               </button>
@@ -376,6 +434,67 @@ export default function FavoriteForm(data: FavoriteFromProps) {
           </div>
         </div>
       )}
+
+      <Pagination
+        page={currentPage}
+        totalRestaurants={paginateTotalPage}
+        handlePaginatePrevious={handlePaginatePrevious}
+        handlePaginateNext={handlePaginateNext}
+        handlePaginateButtonClick={handlePaginateButtonClick}
+      />
     </div>
   );
 }
+
+/**
+ * 指定した offset からお気に入り一覧を取得し、
+ * レストラン詳細まで解決した配列を返す共通処理。
+ * 取得に失敗した場合は toast でエラーを表示し null を返す。
+ */
+const fetchFavoritesPage = async (
+  offset: number,
+): Promise<RestaurantType[] | null> => {
+  const params = new URLSearchParams({
+    limit: String(LIMIT),
+    offset: String(offset),
+  });
+
+  try {
+    const res = await fetch(`/api/restaurants/favorites?${params.toString()}`, {
+      method: "GET",
+      credentials: "include",
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      toast.error(data.message);
+      return null;
+    }
+
+    const favoriteRestaurants = data.favoriteRestaurants;
+    const restaurants = await Promise.all(
+      favoriteRestaurants.map(async ({ restaurant_id, created_at }) => {
+        const detailParams = new URLSearchParams({ restaurant_id });
+        const detailRes = await fetch(
+          `/api/restaurants?${detailParams.toString()}`,
+          { method: "GET" },
+        );
+        const detailData = await detailRes.json();
+
+        if (!detailRes.ok) {
+          return null;
+        }
+
+        return {
+          ...detailData.restaurants[0],
+          created_at,
+        };
+      }),
+    );
+
+    // 個別リクエストが失敗すると null が混ざるためフィルタしておく
+    return restaurants.filter((r): r is RestaurantType => r !== null);
+  } catch (e: unknown) {
+    console.error("e", e);
+    return null;
+  }
+};
