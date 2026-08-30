@@ -28,7 +28,7 @@ export default function SignupForm() {
         headers: {
           "Content-Type": "application/json",
         },
-        // signal:
+        signal: AbortSignal.timeout(10000),
         body: JSON.stringify(values),
       });
       const data = await res.json();
@@ -45,7 +45,19 @@ export default function SignupForm() {
       toast.success(data.message);
       router.push("/");
     } catch (e: unknown) {
-      console.error("error occured", e);
+      if (e instanceof TypeError) {
+        console.error("ネットワークエラーが発生しました:", e.message);
+        // ユーザーへの通知: "インターネットに接続されていません。回線状況を確認してください。"
+        toast.error(
+          "インターネットに接続されていません。回線状況を確認してください。",
+        );
+        return;
+      }
+
+      console.error("予期せぬエラー", e);
+      toast.error(
+        "予期せぬエラーが発生しました。時間を押してから再度実行してください",
+      );
     }
   };
 

@@ -58,8 +58,8 @@ export default function ContactConfirmPage(props: Props) {
         headers: {
           "Content-Type": "application/json",
         },
-        // signal
         body: JSON.stringify(inputData),
+        signal: AbortSignal.timeout(10000),
       });
       const data = await res.json();
       if (!res.ok) {

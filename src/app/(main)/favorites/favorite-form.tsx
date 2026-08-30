@@ -90,6 +90,7 @@ export default function FavoriteForm(props: FavoriteFromProps) {
         method: "DELETE",
         credentials: "include",
         cache: "no-store",
+        signal: AbortSignal.timeout(10000),
       });
       const resData = await res.json();
       if (!res.ok) {
@@ -105,7 +106,19 @@ export default function FavoriteForm(props: FavoriteFromProps) {
       setFavorites((prev) => prev.filter((f) => f.id !== id));
       router.refresh();
     } catch (e: unknown) {
-      console.error("e", e);
+      if (e instanceof TypeError) {
+        console.error("ネットワークエラーが発生しました:", e.message);
+        // ユーザーへの通知: "インターネットに接続されていません。回線状況を確認してください。"
+        toast.error(
+          "インターネットに接続されていません。回線状況を確認してください。",
+        );
+        return;
+      }
+
+      console.error("予期せぬエラー", e);
+      toast.error(
+        "予期せぬエラーが発生しました。時間を押してから再度実行してください",
+      );
     }
   };
 
@@ -463,6 +476,7 @@ const fetchFavoritesPage = async (
     const res = await fetch(`/api/restaurants/favorites?${params.toString()}`, {
       method: "GET",
       credentials: "include",
+      signal: AbortSignal.timeout(10000),
     });
     const data = await res.json();
     if (!res.ok) {
@@ -476,7 +490,7 @@ const fetchFavoritesPage = async (
         const detailParams = new URLSearchParams({ restaurant_id });
         const detailRes = await fetch(
           `/api/restaurants?${detailParams.toString()}`,
-          { method: "GET" },
+          { method: "GET", signal: AbortSignal.timeout(10000) },
         );
         const detailData = await detailRes.json();
 
@@ -494,7 +508,19 @@ const fetchFavoritesPage = async (
     // 個別リクエストが失敗すると null が混ざるためフィルタしておく
     return restaurants.filter((r): r is RestaurantType => r !== null);
   } catch (e: unknown) {
-    console.error("e", e);
+    if (e instanceof TypeError) {
+      console.error("ネットワークエラーが発生しました:", e.message);
+      // ユーザーへの通知: "インターネットに接続されていません。回線状況を確認してください。"
+      toast.error(
+        "インターネットに接続されていません。回線状況を確認してください。",
+      );
+      return null;
+    }
+
+    console.error("予期せぬエラー", e);
+    toast.error(
+      "予期せぬエラーが発生しました。時間を押してから再度実行してください",
+    );
     return null;
   }
 };

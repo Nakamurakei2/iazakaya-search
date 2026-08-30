@@ -19,6 +19,7 @@ export function HeaderLoggedIn() {
     const res = await fetch("/api/auth/logout", {
       method: "DELETE",
       credentials: "include",
+      signal: AbortSignal.timeout(10000),
     });
     const data = await res.json();
     if (!res.ok) {
