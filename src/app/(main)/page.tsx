@@ -163,6 +163,7 @@ export default function IzakayaSearchApp() {
         method: "DELETE",
         credentials: "include",
         cache: "no-store",
+        signal: AbortSignal.timeout(10000),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -175,7 +176,19 @@ export default function IzakayaSearchApp() {
 
       router.refresh(); // サーバーへ最新データを取得するリクエストを送り更新する
     } catch (e: unknown) {
-      console.error("e", e);
+      if (e instanceof TypeError) {
+        console.error("ネットワークエラーが発生しました:", e.message);
+        // ユーザーへの通知: "インターネットに接続されていません。回線状況を確認してください。"
+        toast.error(
+          "インターネットに接続されていません。回線状況を確認してください。",
+        );
+        return;
+      }
+
+      console.error("予期せぬエラー", e);
+      toast.error(
+        "予期せぬエラーが発生しました。時間を押してから再度実行してください",
+      );
     }
   };
 
@@ -202,6 +215,7 @@ export default function IzakayaSearchApp() {
     try {
       const res = await fetch("/api/restaurants/favorites", {
         method: "GET",
+        signal: AbortSignal.timeout(10000),
       });
       const datas = await res.json();
       if (!res.ok) {
@@ -214,7 +228,19 @@ export default function IzakayaSearchApp() {
 
       setFavoriteIds(restaurantIds);
     } catch (e: unknown) {
-      console.error("e", e);
+      if (e instanceof TypeError) {
+        console.error("ネットワークエラーが発生しました:", e.message);
+        // ユーザーへの通知: "インターネットに接続されていません。回線状況を確認してください。"
+        toast.error(
+          "インターネットに接続されていません。回線状況を確認してください。",
+        );
+        return;
+      }
+
+      console.error("予期せぬエラー", e);
+      toast.error(
+        "予期せぬエラーが発生しました。時間を押してから再度実行してください",
+      );
     }
 
     // 詳細検索窓を閉じる

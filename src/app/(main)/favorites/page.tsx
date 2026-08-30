@@ -49,6 +49,7 @@ export default async function FavoritePage() {
           Cookie: allCookies,
         },
         cache: "no-store",
+        signal: AbortSignal.timeout(10000),
       },
     );
 

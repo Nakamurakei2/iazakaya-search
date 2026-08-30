@@ -52,6 +52,7 @@ export const handleLocationSearch = async (props: Props) => {
     // 店舗データを取得
     const res = await fetch(`/api/restaurants/search?${params.toString()}`, {
       method: "GET",
+      signal: AbortSignal.timeout(10000),
     });
     const data = await res.json();
     if (!res.ok) {
@@ -198,6 +199,7 @@ export const handlePaginateNext = async (props: PaginationProps) => {
   try {
     const res = await fetch(`/api/restaurants/search?${params.toString()}`, {
       method: "GET",
+      signal: AbortSignal.timeout(10000),
     });
     const data = await res.json();
     if (!res.ok) {
@@ -263,6 +265,7 @@ export const handlePaginatePrevious = async (props: PaginationProps) => {
   try {
     const res = await fetch(`/api/restaurants/search?${params.toString()}`, {
       method: "GET",
+      signal: AbortSignal.timeout(10000),
     });
     const data = await res.json();
     if (!res.ok) {
@@ -329,6 +332,7 @@ export const handlePaginateButtonClick = async (
   try {
     const res = await fetch(`/api/restaurants/search?${params}`, {
       method: "GET",
+      signal: AbortSignal.timeout(10000),
     });
 
     const data = await res.json();
@@ -370,7 +374,7 @@ export const handleAddFavoritesButtonClick = async (
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ restaurantId }),
-      // signal
+      signal: AbortSignal.timeout(10000),
     });
 
     const data = await res.json();
@@ -405,7 +409,7 @@ export const handleDeleteFavoritesButton = async (
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ restaurantId }),
-      // signal
+      signal: AbortSignal.timeout(10000),
     });
 
     const data = await res.json();
