@@ -170,16 +170,6 @@ export const handleSearch = async (props: SearchProps) => {
 };
 
 /**
- * 「予約する」ボタンクリック時処理
- * hotpepper beautyへ遷移させる
- */
-export const handleReserve = (shop: any) => {
-  // 予約ボタン押下時、外部の予約ページへ遷移する
-  // const url = `${RESERVE_URL_BASE}/${shop.id}`;
-  // window.open(url, "_blank", "noopener,noreferrer");
-};
-
-/**
  * ページネーション「>」ボタンクリック時処理
  */
 export const handlePaginateNext = async (props: PaginationProps) => {
@@ -424,7 +414,6 @@ export const handleDeleteFavoritesButton = async (
       return;
     }
     toast.success(data.message);
-    console.log("data", data);
 
     // return data.restaurant_id;
   } catch (e: unknown) {

@@ -1,11 +1,11 @@
 import { pool } from "@/lib/pool";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 
 /**
  * お気に入り取得API
  */
-export async function GET(req: NextResponse) {
+export async function GET(req: NextRequest) {
   const token = req.cookies.get("auth_token")?.value;
 
   if (!token) {
@@ -20,14 +20,40 @@ export async function GET(req: NextResponse) {
 
   if (userId) {
     try {
-      const query = `SELECT restaurant_id, created_at FROM favorites WHERE user_id = $1 ORDER BY created_at DESC`;
-      const result = await pool.query(query, [userId]);
-      const rows = result.rows;
+      const limit = req.nextUrl.searchParams.get("limit");
+      const offset = req.nextUrl.searchParams.get("offset");
 
+      let query = `
+        SELECT restaurant_id, created_at
+        FROM favorites
+        WHERE user_id = $1
+        ORDER BY created_at DESC
+      `;
+
+      const params: (string | number)[] = [userId];
+
+      if (limit !== null && offset !== null) {
+        query += `
+          LIMIT $2
+          OFFSET $3
+        `;
+
+        params.push(Number(limit), Number(offset));
+      }
+
+      const countQuery = `SELECT COUNT(*) FROM favorites WHERE user_id = $1`;
+
+      const [result, countResult] = await Promise.all([
+        pool.query(query, [userId, limit, offset]),
+        pool.query(countQuery, [userId]),
+      ]);
+
+      const rows = result.rows;
       return NextResponse.json(
         {
           mesasge: "お気に入り登録したレストランの情報の取得に成功しました！",
           favoriteRestaurants: rows,
+          totalFavorites: countResult.rows[0].count,
         },
         {
           status: 200,

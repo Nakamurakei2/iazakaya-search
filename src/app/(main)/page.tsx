@@ -228,8 +228,6 @@ export default function IzakayaSearchApp() {
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
-  console.log(selected);
-
   return (
     <>
       {menuOpen && (

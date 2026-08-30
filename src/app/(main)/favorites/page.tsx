@@ -1,21 +1,22 @@
-import { RestaurantType } from "@/types/restaurant";
+import { FavoriteItem, RestaurantType } from "@/types/restaurant";
 import FavoriteForm from "./favorite-form";
-import { fetchFavorites } from "@/lib/api/favorites";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import jwt from "jsonwebtoken";
+
+const apiBaseUrl = `${process.env.HOT_PEPPER_BEAUTY_BASE_URL}?key=${process.env.HOT_PEPPER_BEAUTY_API_KEY}`;
+
+const LIMIT = 20;
 
 export default async function FavoritePage() {
   const cookieStore = await cookies();
   const token = cookieStore.get("auth_token")?.value;
 
   if (!token) {
-    console.error("未ログインのユーザー：Cookieなし");
     redirect("/");
   }
 
   try {
-    // 2. JWTの検証（期限切れや改ざんはここでキャッチする）
     const decoded = jwt.verify(
       token,
       process.env.JWT_SECRET!,
@@ -25,12 +26,62 @@ export default async function FavoritePage() {
       throw new Error("Token payload missing sub");
     }
   } catch (e: unknown) {
-    console.error("認証エラー（期限切れまたは改ざん）：", e);
-
-    redirect("/"); // Cookie削除？？
+    console.error("認証エラー:", e);
+    redirect("/");
   }
 
-  const favorites: RestaurantType[] = await fetchFavorites();
+  let favorites: RestaurantType[] = [];
+  let totalFavorites: string = "";
 
-  return <FavoriteForm data={favorites} />;
+  try {
+    const allCookies = cookieStore.toString();
+
+    const params = new URLSearchParams({
+      limit: String(LIMIT),
+      offset: "0",
+    });
+
+    const res = await fetch(
+      `http://localhost:3000/api/restaurants/favorites?${params.toString()}`,
+      {
+        method: "GET",
+        headers: {
+          Cookie: allCookies,
+        },
+        cache: "no-store",
+      },
+    );
+
+    if (res.ok) {
+      const data = await res.json();
+      const favoriteRestaurants: FavoriteItem[] = data.favoriteRestaurants;
+      totalFavorites = data.totalFavorites;
+
+      const restaurants = await Promise.all(
+        favoriteRestaurants.map(async ({ restaurant_id, created_at }) => {
+          const res = await fetch(
+            `${apiBaseUrl}&id=${restaurant_id}&format=json`,
+          );
+
+          if (!res.ok) {
+            return null;
+          }
+
+          const data = await res.json();
+          return {
+            ...data.results.shop[0],
+            created_at,
+          };
+        }),
+      );
+
+      favorites = restaurants.filter(
+        (restaurant): restaurant is RestaurantType => restaurant !== null,
+      );
+    }
+  } catch (e: unknown) {
+    console.error("お気に入り取得エラー:", e);
+  }
+
+  return <FavoriteForm data={favorites} totalFavorites={totalFavorites} />;
 }

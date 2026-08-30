@@ -30,13 +30,12 @@ function ConfirmField({ label, value, multiline }: ConfirmFieldProps) {
 type Props = {
   setIsEntered: Dispatch<SetStateAction<boolean>>;
   inputData: FormState;
-  setInputData: Dispatch<SetStateAction<FormState>>;
 };
 
 export default function ContactConfirmPage(props: Props) {
   const router = useRouter();
 
-  const { setIsEntered, inputData, setInputData } = props;
+  const { setIsEntered, inputData } = props;
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   /**
