@@ -10,16 +10,14 @@ export async function GET(req: NextRequest) {
   try {
     const res = await fetch(`${apiBaseUrl}&id=${restaurant_id}&format=json`);
     if (!res.ok) {
-      if (!res.ok) {
-        return NextResponse.json(
-          {
-            message: "レストラン情報の取得に失敗しました。",
-          },
-          {
-            status: res.status,
-          },
-        );
-      }
+      return NextResponse.json(
+        {
+          message: "レストラン情報の取得に失敗しました。",
+        },
+        {
+          status: res.status,
+        },
+      );
     }
     const data = await res.json();
     const shops = data.results.shop;
