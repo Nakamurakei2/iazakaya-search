@@ -1168,12 +1168,12 @@ button.scroll-up {
   flex-direction: column;
   border-top: 1px solid rgba(20, 24, 31, 0.08);
   background-color: #f7f5f0;
-  padding: 16px 12px;
+  padding: 0 12px;
   z-index: 9999;
 }
 
 .header__drawerLink {
-  padding: 12px 4px;
+  padding: 17px 4px;
   font-size: 14px;
   color: rgba(20, 24, 31, 0.85);
   text-decoration: none;
@@ -1651,8 +1651,7 @@ body {
   font-family: "Zen Kaku Gothic New", "Hiragino Kaku Gothic ProN", sans-serif;
   color: var(--color-text-primary);
   max-width: 480px;
-  margin: 0 auto 50px auto;
-  padding: 28px 18px 40px;
+  padding: 28px 18px 60px;
   box-sizing: border-box;
   overflow: hidden;
 }
@@ -2932,6 +2931,11 @@ body {
 .favorite-dialog-footer {
   justify-content: space-between;
   gap: 10px;
+}
+
+.hidden {
+  display: block;
+  visibility: hidden;
 }
 
 .reserve-btn {
