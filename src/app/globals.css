@@ -1644,6 +1644,8 @@ button.scroll-up {
 body {
   background: var(--color-text-primary);
   min-height: 100vh;
+  max-width: 480px;
+  margin: 0 auto;
 }
 
 .page {
