@@ -1654,6 +1654,7 @@ body {
   padding: 28px 18px 60px;
   box-sizing: border-box;
   overflow: hidden;
+  margin: 0 auto;
 }
 
 .ambient-glow {
