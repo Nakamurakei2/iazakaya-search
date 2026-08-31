@@ -45,6 +45,8 @@ export default function FavoriteForm(props: FavoriteFromProps) {
 
   const paginateTotalPage = Math.ceil(Number(totalFavorites) / LIMIT); // ページネーションの合計ページ数
 
+  console.log("paginateTotalPage", paginateTotalPage);
+
   useEffect(() => {
     if (selected && dialogRef.current) dialogRef.current.focus();
   }, [selected]);
@@ -448,13 +450,15 @@ export default function FavoriteForm(props: FavoriteFromProps) {
         </div>
       )}
 
-      <Pagination
-        page={currentPage}
-        totalRestaurants={paginateTotalPage}
-        handlePaginatePrevious={handlePaginatePrevious}
-        handlePaginateNext={handlePaginateNext}
-        handlePaginateButtonClick={handlePaginateButtonClick}
-      />
+      {paginateTotalPage > 0 && (
+        <Pagination
+          page={currentPage}
+          totalRestaurants={paginateTotalPage}
+          handlePaginatePrevious={handlePaginatePrevious}
+          handlePaginateNext={handlePaginateNext}
+          handlePaginateButtonClick={handlePaginateButtonClick}
+        />
+      )}
     </div>
   );
 }
