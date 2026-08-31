@@ -42,7 +42,7 @@ export default async function FavoritePage() {
     });
 
     const res = await fetch(
-      `http://localhost:3000/api/restaurants/favorites?${params.toString()}`,
+      `${process.env.APP_URL}/api/restaurants/favorites?${params.toString()}`,
       {
         method: "GET",
         headers: {
