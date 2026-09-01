@@ -2,6 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { CiLocationOn } from "react-icons/ci";
+import { IoPersonCircleOutline } from "react-icons/io5";
 
 export function HeaderLoggedOut() {
   const router = useRouter();
@@ -22,30 +24,26 @@ export function HeaderLoggedOut() {
   };
 
   return (
-    <header className="header-main">
-      <div className={menuOpen ? "overlay" : ""}></div>
-      <div className="header-contents">
-        <div className="header__bar">
-          <div className="header__actions">
-            <div className="header__buttons">
-              <button
-                type="button"
-                className="header__loginButton"
-                onClick={handleLogin}
-              >
-                ログイン
-              </button>
-              <button
-                type="button"
-                className="header__signupButton"
-                onClick={handleSignup}
-              >
-                登録
-              </button>
-            </div>
-          </div>
+    <>
+      <header className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-container-margin py-xs bg-surface/80 dark:bg-surface/80 backdrop-blur-xl shadow-sm">
+        <div className="flex items-center gap-sm">
+          <button className="text-primary hover:bg-surface-variant/50 transition-all duration-300 active:scale-95 p-2 rounded-full flex items-center justify-center">
+            <span className="material-symbols-outlined" data-icon="location_on">
+              <CiLocationOn />
+            </span>
+          </button>
+          <h1 className="font-headline-md text-headline-md font-bold text-primary">
+            Izakaya Finder
+          </h1>
         </div>
-      </div>
-    </header>
+        <div className="flex items-center">
+          <button className="hover:bg-surface-variant/50 transition-all duration-300 active:scale-95 p-2 rounded-full flex items-center justify-center">
+            <span className="material-symbols-outlined text-on-surface-variant">
+              <IoPersonCircleOutline />
+            </span>
+          </button>
+        </div>
+      </header>
+    </>
   );
 }

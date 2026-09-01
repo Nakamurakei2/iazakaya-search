@@ -1,9 +1,9 @@
 "use client";
 
-import { Lock, Mail } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
+import { MdArrowForward, MdLock, MdMail, MdRestaurant } from "react-icons/md";
 import { toast } from "sonner";
 
 type LoginFormValues = {
@@ -38,6 +38,7 @@ export default function LoginForm() {
         return;
       }
       toast.success(data.message);
+      console.log("hoge");
       router.push("/");
     } catch (e: unknown) {
       if (e instanceof Error) {
@@ -65,53 +66,85 @@ export default function LoginForm() {
   };
 
   return (
-    <div className="auth">
-      <div className="auth__card">
-        {/* <div className="auth__logo">
-          <span className="auth__logoDot" />
-          <span className="auth__logoText">Beacon</span>
-        </div> */}
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#131313] p-5 text-[#e5e2e1] md:p-8">
+      {/* Background */}
+      <div className="pointer-events-none absolute inset-0 bg-cover bg-center opacity-30" />
 
-        <div className="auth__tabs">
-          <Link href="/login" className="auth__tab auth__tab--active">
-            ログイン
-          </Link>
-          <Link href="/signup" className="auth__tab">
-            新規登録
-          </Link>
+      {/* Login Container */}
+      <div className="relative z-10 w-full max-w-md rounded-[24px] border border-[#353534] bg-[#1c1b1b]/60 p-8 shadow-[0px_10px_30px_rgba(255,140,0,0.08)] backdrop-blur-xl md:p-12">
+        {/* Logo Header */}
+        <div className="mb-12 text-center">
+          {/* Icon */}
+          <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-full bg-[#ff8c00] text-[#623200]">
+            <MdRestaurant className="text-4xl" />
+          </div>
+
+          {/* Title */}
+          <h1 className="mb-2 text-[28px] font-bold leading-9 text-[#e5e2e1] md:text-[40px] md:leading-12">
+            Amber Lantern
+          </h1>
+
+          <p className="text-[16px] leading-6 text-[#ddc1ae]">
+            Find your glow in the night.
+          </p>
         </div>
 
-        <form className="auth__form" onSubmit={handleSubmit(onSubmit)}>
-          <div className="auth__field">
-            <label className="auth__label" htmlFor="login-email">
-              メールアドレス
+        {/* Login Form */}
+        <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
+          {/* Email */}
+          <div className="space-y-1">
+            <label
+              htmlFor="email"
+              className="text-sm font-bold leading-5 text-[#e5e2e1]"
+            >
+              Email Address
             </label>
-            <div className="auth__inputWrap">
-              <Mail size={16} strokeWidth={1.75} className="auth__inputIcon" />
+
+            <div className="relative">
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-[#ddc1ae]">
+                <MdMail className="text-xl" />
+              </div>
+
               <input
-                id="login-email"
+                id="email"
                 type="email"
-                className="auth__input"
-                placeholder="you@example.com"
+                placeholder="your@email.com"
                 {...register("email", {
                   required: "メールアドレスを入力してください",
                 })}
+                className="w-full rounded-lg border-0 bg-[#201f1f] py-4 pl-12 pr-4 text-[16px] leading-6 text-[#e5e2e1] placeholder:text-[#ddc1ae]/50 focus:bg-[#2a2a2a] focus:outline-none focus:ring-2 focus:ring-[#ffb77d]"
               />
+              <p className="error-message">{errors.email?.message}</p>
             </div>
-            <p className="error-message">{errors.email?.message}</p>
           </div>
 
-          <div className="auth__field">
-            <label className="auth__label" htmlFor="login-password">
-              パスワード
-            </label>
-            <div className="auth__inputWrap">
-              <Lock size={16} strokeWidth={1.75} className="auth__inputIcon" />
+          {/* Password */}
+          <div className="space-y-1 mt-8">
+            <div className="flex items-center justify-between">
+              <label
+                htmlFor="password"
+                className="text-sm font-bold leading-5 text-[#e5e2e1]"
+              >
+                Password
+              </label>
+
+              <Link
+                href="/forgot-password"
+                className="text-xs font-semibold text-[#ffb77d] transition-colors hover:text-[#ffdcc3]"
+              >
+                Forgot Password?
+              </Link>
+            </div>
+
+            <div className="relative">
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-[#ddc1ae]">
+                <MdLock className="text-xl" />
+              </div>
+
               <input
-                id="login-password"
+                id="password"
                 type="password"
-                className="auth__input"
-                placeholder="5文字以上"
+                placeholder="••••••••"
                 {...register("password", {
                   required: "パスワードを入力してください",
                   minLength: {
@@ -119,36 +152,65 @@ export default function LoginForm() {
                     message: "パスワードは5文字以上で入力してください",
                   },
                 })}
+                className="w-full rounded-lg border-0 bg-[#201f1f] py-4 pl-12 pr-4 text-[16px] leading-6 text-[#e5e2e1] placeholder:text-[#ddc1ae]/50 focus:bg-[#2a2a2a] focus:outline-none focus:ring-2 focus:ring-[#ffb77d]"
               />
+              <p className="error-message">{errors.password?.message}</p>
             </div>
-            <p className="error-message">{errors.password?.message}</p>
           </div>
 
-          {/* <a href="#forgot-password" className="auth__forgotLink">
-                パスワードをお忘れですか？
-              </a> */}
-
+          {/* Login Button */}
           <button
             type="submit"
-            className="auth__submit"
             disabled={isSubmitting}
+            className="mt-8 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#ff8c00] py-4 text-sm font-bold leading-5 text-[#623200] shadow-lg transition-colors hover:bg-[#ffb77d]"
           >
-            ログイン
+            <span>Login</span>
+            <MdArrowForward className="text-sm" />
           </button>
         </form>
 
-        <p className="auth__switchText">
-          アカウントをお持ちでない方は
-          <Link href="/signup" className="auth__switchLink">
-            新規登録
-          </Link>
-        </p>
+        {/* Divider */}
+        <div className="my-8 flex items-center">
+          <div className="flex-grow border-t border-[#353534]" />
 
-        <p className="auth__switchText">
-          <Link href="/" className="auth__switchLink">
-            ログインせずに利用する場合はこちらから
+          <span className="mx-4 text-xs font-semibold text-[#ddc1ae]">
+            or continue with
+          </span>
+
+          <div className="flex-grow border-t border-[#353534]" />
+        </div>
+
+        {/* Social Login */}
+        <div className="mb-8 grid grid-cols-2 gap-4">
+          <button
+            type="button"
+            className="flex items-center justify-center gap-2 rounded-lg border border-[#353534] bg-[#1c1b1b] px-4 py-4 text-sm font-bold text-[#e5e2e1] transition-colors hover:bg-[#201f1f]"
+          >
+            {/* Google */}
+            <span className="text-base font-bold">G</span>
+            Google
+          </button>
+
+          <button
+            type="button"
+            className="flex items-center justify-center gap-2 rounded-lg border border-[#353534] bg-[#1c1b1b] px-4 py-4 text-sm font-bold text-[#e5e2e1] transition-colors hover:bg-[#201f1f]"
+          >
+            {/* Apple */}
+            <span className="text-base"></span>
+            Apple
+          </button>
+        </div>
+
+        {/* Sign Up */}
+        <div className="text-center text-[16px] leading-6 text-[#ddc1ae]">
+          Don't have an account?
+          <Link
+            href="/signup"
+            className="text-sm font-bold text-[#ffb77d] transition-colors hover:text-[#ffdcc3]"
+          >
+            Sign Up
           </Link>
-        </p>
+        </div>
       </div>
     </div>
   );

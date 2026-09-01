@@ -1,32 +1,9 @@
 "use client";
 
 import { useState, useRef, FormEvent } from "react";
-import {
-  Search,
-  MapPin,
-  X,
-  Clock,
-  Users,
-  Wallet,
-  CalendarCheck,
-  Loader2,
-  Flame,
-  MapPinned,
-  SlidersHorizontal,
-  ChevronDown,
-  HeartOff,
-  Heart,
-  AlertTriangle,
-} from "lucide-react";
+import { Search } from "lucide-react";
 import { Pagination } from "@/components/pagination";
-import {
-  handleAddFavoritesButtonClick,
-  handleLocationSearch,
-  handlePaginateButtonClick,
-  handlePaginateNext,
-  handlePaginatePrevious,
-  handleSearch,
-} from "@/services/restaurant-api";
+import { handleLocationSearch, handleSearch } from "@/services/restaurant-api";
 import {
   FavoriteItem,
   GENRE_STYLE,
@@ -36,6 +13,12 @@ import {
 } from "@/types/restaurant";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { FaLocationArrow, FaStar } from "react-icons/fa";
+import { MdOutlineAccountCircle, MdOutlineRestaurant } from "react-icons/md";
+import { IoBeer, IoLocationOutline } from "react-icons/io5";
+import { IoMdTrain } from "react-icons/io";
+import { Dialog } from "@/components/dialog";
+import { ConfirmDialog } from "@/components/confirmDailog";
 
 type MainProps = {
   authorized: boolean;
@@ -77,11 +60,10 @@ export default function IzakayaSearchApp(props: MainProps) {
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]); // お気に入り登録
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
+  const confirmDialogRef = useRef<HTMLDivElement>(null);
   const [confirmTarget, setConfirmTarget] = useState<RestaurantType | null>(
     null,
   ); // 削除確認ダイアログ
-  const confirmDialogRef = useRef<HTMLDivElement>(null);
-
   const scrollRef = useRef<HTMLDivElement>(null);
   const selected = shops?.find((s) => s.id === selectedId) || null;
 
@@ -105,41 +87,6 @@ export default function IzakayaSearchApp(props: MainProps) {
 
   const handleQuickIzakayaFilter = () => {
     setSelectedGenres([IZAKAYA_GENRE_CODE]);
-  };
-
-  /**
-   * Enterキー押下時処理
-   * @param e フォームイベント
-   */
-  const handleSubmit = (e: FormEvent): void => {
-    e.preventDefault();
-
-    handleSearch({
-      pageSize,
-      selectedGenres,
-      startPage,
-      stationName,
-      setIsLocating,
-      setTotalRestaurants,
-      setShops,
-      setPage,
-      setLocationNotice,
-      setCurrentLocationData,
-    });
-
-    setIsAdvancedOpen(false);
-  };
-
-  /**
-   * お気に入り登録ボタン
-   */
-  const handleAddFavorites = async (id: string): Promise<void> => {
-    const restaurantId = await handleAddFavoritesButtonClick({
-      restaurantId: id,
-    });
-    if (restaurantId) setFavoriteIds((prev) => [...prev, restaurantId]);
-
-    setSelectedId(""); // 詳細ダイアログ閉じる
   };
 
   /**
@@ -222,10 +169,12 @@ export default function IzakayaSearchApp(props: MainProps) {
         method: "GET",
         signal: AbortSignal.timeout(10000),
       });
-      const datas = await res.json();
       if (!res.ok) {
+        const data = await res.json();
+        console.error(data.message);
         return;
       }
+      const datas = await res.json();
       const favoriteRestaurants: FavoriteItem[] = datas.favoriteRestaurants;
       const restaurantIds = favoriteRestaurants.map((data) => {
         return data.restaurant_id;
@@ -252,42 +201,32 @@ export default function IzakayaSearchApp(props: MainProps) {
     setIsAdvancedOpen(false);
   };
 
-  /**
-   * 「予約する」ボタン押下時処理
-   */
-  const handleReserveButtonClick = async (url: string) => {
-    window.open(url, "_blank", "noopener,noreferrer");
-  };
-
   return (
     <>
-      {menuOpen && (
-        <div className="overlay" onClick={() => setMenuOpen(false)}></div>
-      )}
-      <div className="page">
-        <div className="ambient-glow" aria-hidden="true" />
-        {/* ヘッダー */}
-        <header className="header">
-          <div className="brand-row">
-            <span className="lantern-dot" aria-hidden="true" />
-            <h1 className="brand-title">夜のよこ町</h1>
-          </div>
-          <p className="brand-sub">今夜の一軒を、近くから探す</p>
-        </header>
-        {/* 検索エリア */}
-        <section className="search-card" ref={scrollRef}>
-          <form className="search-row" onSubmit={(e) => handleSubmit(e)}>
-            <div className="input-wrap">
-              <Search
-                size={18}
-                color="#B3A594"
-                className="input-icon"
-                style={{ cursor: "pointer" }}
-                onClick={() => {
+      <main className="pt-24 px-container-margin max-w-[1200px] mx-auto grid grid-cols-4 md:grid-cols-12 gap-gutter">
+        <section className="col-span-4 md:col-span-8 md:col-start-3 flex flex-col gap-sm mb-lg">
+          <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-background text-center mb-xs">
+            今夜の居酒屋を探す
+          </h2>
+          <div className="relative w-full rounded-2xl bg-surface-bright shadow-[0px_10px_30px_rgba(255,140,0,0.08)] flex items-center overflow-hidden border border-surface-container-highest focus-within:border-primary transition-colors duration-300">
+            <div className="pl-md flex items-center text-on-surface-variant">
+              <span className="material-symbols-outlined" data-icon="search">
+                <Search />
+              </span>
+            </div>
+            <input
+              className="w-full bg-transparent border-none focus:ring-0 text-on-background font-body-lg text-body-lg px-sm py-4 placeholder-on-surface-variant/50"
+              placeholder="駅名で検索（例：渋谷）"
+              type="text"
+              onChange={(e) => setStationName(e.target.value)}
+            />
+            <div className="pr-sm">
+              <button
+                onClick={() =>
                   handleSearch({
                     pageSize,
-                    selectedGenres,
                     startPage,
+                    selectedGenres,
                     stationName,
                     setIsLocating,
                     setTotalRestaurants,
@@ -295,201 +234,80 @@ export default function IzakayaSearchApp(props: MainProps) {
                     setPage,
                     setLocationNotice,
                     setCurrentLocationData,
-                  });
-                  setIsAdvancedOpen(false);
-                }}
-              />
-              <input
-                type="text"
-                name="stationSearch"
-                autoComplete="search-term"
-                value={stationName}
-                onChange={(e) => setStationName(e.target.value)}
-                placeholder="駅名で検索（例：渋谷）"
-                className="input"
-                aria-label="駅名や店名で検索"
-                enterKeyHint="search" // スマホのキーボードのEnterを「検索」に変更する
-              />
-              {/* 隠し送信ボタン：これでスマホやPCのEnterを確実にキャッチ */}
-              <button
-                type="submit"
-                style={{ display: "none" }}
-                aria-hidden="true"
-              />
-
-              {/* TODO：ジャンル検索するために何かボタンなどを別途用意する */}
-              {stationName && (
-                <button
-                  onClick={() => setStationName("")}
-                  className="clear-btn"
-                  aria-label="検索文字をクリア"
-                >
-                  <X size={14} />
-                </button>
-              )}
-            </div>
-
-            <button
-              onClick={() => handleLocationButtonClick()}
-              className="location-btn"
-              disabled={isLocating}
-            >
-              {isLocating ? (
-                <Loader2 size={16} className="spin" />
-              ) : (
-                <MapPin size={16} />
-              )}
-
-              <span>{isLocating ? "現在地を取得中…" : "現在地から検索"}</span>
-            </button>
-          </form>
-
-          <div className="advanced-toggle-row">
-            <button
-              type="button"
-              className="advanced-toggle-btn"
-              onClick={() => setIsAdvancedOpen((v) => !v)}
-              aria-expanded={isAdvancedOpen}
-            >
-              <SlidersHorizontal size={14} />
-              詳細検索
-              <ChevronDown
-                size={14}
-                className={`advanced-toggle-caret ${
-                  isAdvancedOpen ? "advanced-toggle-caret--open" : ""
-                }`}
-              />
-            </button>
-
-            <button
-              type="button"
-              className="quick-filter-btn"
-              onClick={handleQuickIzakayaFilter}
-            >
-              居酒屋のみで絞り込む
-            </button>
-          </div>
-
-          {isAdvancedOpen && (
-            <div className="advanced-panel">
-              <p className="advanced-panel-label">ジャンルで絞り込む</p>
-              <div className="genre-chip-row">
-                {GENRE_OPTIONS.map((g) => {
-                  const active = selectedGenres.includes(g.code);
-                  const color =
-                    GENRE_STYLE[g.code as keyof typeof GENRE_STYLE]?.c ??
-                    "#8C6A4E";
-                  return (
-                    <button
-                      type="button"
-                      key={g.code}
-                      className={`genre-chip-btn ${
-                        active ? "genre-chip-btn--active" : ""
-                      }`}
-                      style={
-                        active
-                          ? { background: color, borderColor: color }
-                          : { borderColor: color, color }
-                      }
-                      onClick={() => toggleGenre(g.code)}
-                      aria-pressed={active}
-                    >
-                      {g.name}
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="advanced-panel-actions">
-                <button
-                  type="button"
-                  className="advanced-clear-btn"
-                  onClick={handleClearGenres}
-                  disabled={selectedGenres.length === 0}
-                >
-                  クリア
-                </button>
-                <button
-                  type="button"
-                  className="advanced-apply-btn"
-                  onClick={handleApplyAdvancedSearch}
-                >
-                  この条件で登録
-                </button>
-              </div>
-            </div>
-          )}
-
-          {locationNotice && (
-            <p className="location-notice">
-              <MapPinned size={13} className="location-notice-icon" />
-              {locationNotice}から近い順に表示しています
-            </p>
-          )}
-        </section>
-
-        {selectedGenres.length > 0 && (
-          <div className="applied-filters-row">
-            {selectedGenres.map((code) => {
-              const g = GENRE_OPTIONS.find((o) => o.code === code);
-              if (!g) return null;
-              const color =
-                GENRE_STYLE[code as keyof typeof GENRE_STYLE]?.c ?? "#8C6A4E";
-              return (
-                <span
-                  key={code}
-                  className="applied-filter-chip"
-                  style={{ borderColor: color, color }}
-                >
-                  {g.name}
-                  <button
-                    type="button"
-                    onClick={() => removeGenre(code)}
-                    aria-label={`${g.name}を解除`}
-                  >
-                    <X size={11} />
-                  </button>
-                </span>
-              );
-            })}
-          </div>
-        )}
-
-        <div className="display-row baseline">
-          {/* 結果件数 */}
-          <div className="result-meta">
-            <span>
-              {totalRestaurants ? totalRestaurants : 0}件 見つかりました
-            </span>
-          </div>
-
-          <div className="display-column">
-            {/* 検索数 */}
-            <select
-              id="page-size-select"
-              className="page-size-select"
-              value={pageSize}
-              onChange={(e) => setPageSize(Number(e.target.value))}
-            >
-              {pageSize_OPTIONS.map((n) => (
-                <option key={n} value={n}>
-                  {n}件表示
-                </option>
-              ))}
-            </select>
-            {totalRestaurants && totalRestaurants > 1 && (
-              <span
-                className="page-indicator-small result-meta"
-                style={{ marginTop: "10px" }}
+                  })
+                }
+                className="bg-primary-container text-on-primary-container px-sm py-2 rounded-xl font-label-bold text-label-bold hover:bg-primary-container/90 transition-colors active:scale-95"
               >
-                {page} / {Math.ceil(totalRestaurants / pageSize)} ページ
-              </span>
-            )}
+                検索
+              </button>
+            </div>
           </div>
-        </div>
+          <button
+            className="w-full md:w-auto md:self-center border-2 border-primary text-primary px-lg py-3 rounded-full font-label-bold text-label-bold flex items-center justify-center gap-xs hover:bg-primary hover:text-white transition-colors duration-300 active:scale-95 mt-xs"
+            onClick={handleLocationButtonClick}
+          >
+            <span className="material-symbols-outlined" data-icon="near_me">
+              <FaLocationArrow />
+            </span>
+            現在地周辺から探す
+          </button>
+        </section>
+        <section className="col-span-4 md:col-span-12 mb-lg">
+          <h3 className="font-body-lg text-body-lg text-on-surface-variant mb-sm">
+            最近の検索・よく行くエリア
+          </h3>
+          <div className="flex gap-sm overflow-x-auto pb-sm scrollbar-hide snap-x">
+            <button className="bg-surface-container text-on-background px-sm py-2 rounded-full whitespace-nowrap flex items-center gap-base border border-outline-variant hover:border-primary transition-colors snap-start">
+              <span
+                className="material-symbols-outlined text-[18px] text-primary"
+                data-icon="train"
+              >
+                <IoMdTrain />
+              </span>
+              新宿駅
+            </button>
+            <button className="bg-surface-container text-on-background px-sm py-2 rounded-full whitespace-nowrap flex items-center gap-base border border-outline-variant hover:border-primary transition-colors snap-start">
+              <span
+                className="material-symbols-outlined text-[18px] text-primary"
+                data-icon="train"
+              >
+                <IoMdTrain />
+              </span>
+              渋谷駅
+            </button>
+            <button className="bg-surface-container text-on-background px-sm py-2 rounded-full whitespace-nowrap flex items-center gap-base border border-outline-variant hover:border-primary transition-colors snap-start">
+              <span
+                className="material-symbols-outlined text-[18px] text-secondary"
+                data-icon="restaurant"
+              >
+                <MdOutlineRestaurant />
+              </span>
+              焼き鳥
+            </button>
+            <button className="bg-surface-container text-on-background px-sm py-2 rounded-full whitespace-nowrap flex items-center gap-base border border-outline-variant hover:border-primary transition-colors snap-start">
+              <span
+                className="material-symbols-outlined text-[18px] text-secondary"
+                data-icon="sports_bar"
+              >
+                <IoBeer />
+              </span>
+              クラフトビール
+            </button>
+          </div>
+        </section>
+        <section className="col-span-4 md:col-span-12">
+          <h3 className="font-headline-md text-headline-md text-on-background mb-md flex items-center gap-xs">
+            <span
+              className="material-symbols-outlined text-primary"
+              data-icon="star"
+              data-weight="fill"
+            >
+              <FaStar />
+            </span>
+            周辺のお店
+          </h3>
 
-        {/* 一覧 */}
-        <main className="list">
+          {/* 一覧 */}
           {shops?.length === 0 && (
             <div className="empty-state">
               <p className="empty-title">該当するお店が見つかりませんでした</p>
@@ -507,27 +325,49 @@ export default function IzakayaSearchApp(props: MainProps) {
             };
 
             return (
-              <button
+              <div
                 key={shop.id}
-                className="card"
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg mb-5"
                 onClick={() => setSelectedId(shop.id)}
-                aria-haspopup="dialog"
               >
-                <div
-                  className="card-stripe"
-                  style={{ background: style.c }}
-                  aria-hidden="true"
-                />
-
-                <div className="card-body">
-                  <div className="card-top-row">
-                    <h2 className="card-name">{shop.name}</h2>
-
-                    <div className="genre-column">
+                <article className="bg-[#ffffff] text-[#121212] rounded-3xl overflow-hidden shadow-[0px_10px_30px_rgba(255,140,0,0.08)] flex flex-col group cursor-pointer hover:shadow-[0px_15px_40px_rgba(255,140,0,0.15)] transition-shadow duration-300">
+                  <div className="relative h-48 w-full overflow-hidden">
+                    <div
+                      className="bg-cover bg-center w-full h-full group-hover:scale-105 transition-transform duration-500"
+                      data-alt="A warm, inviting photo of a modern Japanese izakaya interior, featuring glowing paper lanterns, rich wooden counters, and a lively atmosphere. A plate of freshly grilled yakitori is in the foreground, illuminated by soft amber lighting against a dark, moody background. High quality, appetizing."
+                      style={{
+                        backgroundImage: `url(${shop.photo.pc.l})`,
+                      }}
+                    ></div>
+                    <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-black/80 to-transparent"></div>
+                  </div>
+                  <div className="p-sm flex flex-col gap-base flex-grow">
+                    <div className="flex justify-between items-start">
+                      <h4 className="font-headline-md text-[20px] leading-[28px] font-bold">
+                        {shop.name}
+                      </h4>
+                      <span className="text-surface-variant font-label-sm text-label-sm whitespace-nowrap mt-1">
+                        {locationNotice && (
+                          <span>
+                            {locationNotice}{" "}
+                            <b className="font-bold">
+                              {shop.distanceKm < 1
+                                ? `${Math.round(shop.distanceKm * 1000)}m`
+                                : `${shop.distanceKm.toFixed(2)}km`}
+                            </b>
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                    <p className="text-surface-variant font-body-md text-body-md line-clamp-2">
+                      {shop.catch}
+                    </p>
+                    <div className="flex flex-wrap gap-2 mt-auto pt-sm">
                       <span
                         className="genre-tag"
                         style={{
-                          color: GENRE_STYLE[shop.genre.code]?.c ?? "#888888",
+                          backgroundColor:
+                            GENRE_STYLE[shop.genre.code]?.c ?? "#888888",
                           borderColor:
                             GENRE_STYLE[shop.genre.code]?.c ?? "#888888",
                         }}
@@ -539,7 +379,7 @@ export default function IzakayaSearchApp(props: MainProps) {
                         <span
                           className="genre-tag"
                           style={{
-                            color:
+                            backgroundColor:
                               GENRE_STYLE[shop.sub_genre.code]?.c ?? "#888888",
                             borderColor:
                               GENRE_STYLE[shop.sub_genre.code]?.c ?? "#888888",
@@ -550,268 +390,34 @@ export default function IzakayaSearchApp(props: MainProps) {
                       ) : null}
                     </div>
                   </div>
-
-                  <div className="card-meta-row">
-                    <span className="meta-item">
-                      <MapPin size={12} className="meta-icon" />
-                      {shop.station_name}駅
-                    </span>
-
-                    <span className="meta-item">
-                      <Wallet size={12} className="meta-icon" />
-                      {shop.budget.name}
-                    </span>
-                  </div>
-
-                  <div className="tag-row">
-                    {/* {shop.tags.slice(0, 3).map((t) => (
-                      <span key={t} className="chip">
-                        {t}
-                      </span>
-                    ))} */}
-
-                    {locationNotice && (
-                      <span className="distance-chip">
-                        {locationNotice}{" "}
-                        {shop.distanceKm < 1
-                          ? `${Math.round(shop.distanceKm * 1000)}m`
-                          : `${shop.distanceKm.toFixed(2)}km`}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </button>
+                </article>
+              </div>
             );
           })}
-        </main>
-        {/* ページネーション */}
-        {Math.ceil(totalRestaurants / pageSize) > 1 && (
-          <Pagination
-            page={page}
-            totalRestaurants={Math.ceil(totalRestaurants / pageSize)}
-            handlePaginatePrevious={() =>
-              handlePaginatePrevious({
-                pageSize,
-                startPage,
-                currentLocationData,
-                setShops,
-                setPage,
-                setStartPage,
-                scrollRef,
-              })
-            }
-            handlePaginateNext={() =>
-              handlePaginateNext({
-                pageSize,
-                startPage,
-                currentLocationData,
-                setShops,
-                setPage,
-                setStartPage,
-                scrollRef,
-              })
-            }
-            handlePaginateButtonClick={(pageNumber: number) =>
-              handlePaginateButtonClick({
-                pageNumber,
-                setStartPage,
-                pageSize,
-                currentLocationData,
-                setShops,
-                setPage,
-              })
-            }
-          />
-        )}
+        </section>
+      </main>
 
-        {/* 詳細ダイアログ */}
-        {selected && (
-          <div className="overlay" onClick={() => setSelectedId("")}>
-            <div
-              className="dialog"
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="dialog-title"
-              tabIndex={-1}
-              ref={dialogRef}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="dialog-header-img">
-                <Flame size={34} className="dialog-flame" />
+      {/* 詳細ダイアログ */}
+      {selected && (
+        <Dialog
+          selected={selected}
+          setSelectedId={setSelectedId}
+          authorized={authorized}
+          favoriteIds={favoriteIds}
+          setFavoriteIds={setFavoriteIds}
+          handleRemoveFavorites={handleRemoveFavorites}
+        />
+      )}
 
-                <button
-                  className="dialog-close"
-                  onClick={() => setSelectedId("")}
-                  aria-label="閉じる"
-                >
-                  <X size={18} />
-                </button>
-              </div>
-
-              <div className="dialog-scroll">
-                <div className="dialog-top-row">
-                  <h2 id="dialog-title" className="dialog-title">
-                    {selected.name}
-                  </h2>
-
-                  <div className="genre-column">
-                    <span
-                      className="genre-tag"
-                      style={{
-                        color: GENRE_STYLE[selected.genre.code]?.c ?? "#888888",
-                        borderColor:
-                          GENRE_STYLE[selected.genre.code]?.c ?? "#888888",
-                      }}
-                    >
-                      {selected.genre.name}
-                    </span>
-
-                    {selected.sub_genre ? (
-                      <span
-                        className="genre-tag"
-                        style={{
-                          color:
-                            GENRE_STYLE[selected.sub_genre.code]?.c ??
-                            "#888888",
-                          borderColor:
-                            GENRE_STYLE[selected.sub_genre.code]?.c ??
-                            "#888888",
-                        }}
-                      >
-                        {selected.sub_genre.name}
-                      </span>
-                    ) : null}
-                  </div>
-                </div>
-
-                <div className="rating-row">
-                  <span className="rating-count">
-                    {/* （{selected.reviews}件のレビュー） */}
-                  </span>
-                </div>
-
-                <dl className="info-list">
-                  <div className="info-row">
-                    <dt className="info-label">
-                      <MapPin size={13} className="meta-icon" />
-                      住所
-                    </dt>
-
-                    <dd className="info-value">
-                      {selected.station_name}駅 ／ {selected.access}
-                    </dd>
-                  </div>
-
-                  <div className="info-row">
-                    <dt className="info-label">
-                      <Clock size={13} className="meta-icon" />
-                      営業時間
-                    </dt>
-
-                    <dd className="info-value">
-                      {selected.open}（{selected.close}）
-                    </dd>
-                  </div>
-
-                  <div className="info-row">
-                    <dt className="info-label">
-                      <Wallet size={13} className="meta-icon" />
-                      予算
-                    </dt>
-
-                    <dd className="info-value">{selected.budget.name}</dd>
-                  </div>
-
-                  <div className="info-row">
-                    <dt className="info-label">
-                      <Users size={13} className="meta-icon" />
-                      席数
-                    </dt>
-
-                    <dd className="info-value">{selected.capacity}席</dd>
-                  </div>
-                </dl>
-              </div>
-
-              {/* ユーザーがログイン */}
-              <div className="dialog-footer favorite-dialog-footer">
-                {favoriteIds.includes(selected.id) ? (
-                  <button
-                    type="button"
-                    className={`${authorized ? "ghost-btn favorite-remove-btn" : "hidden"}`}
-                    onClick={() => handleRemoveFavorites()}
-                  >
-                    <HeartOff size={16} />
-                    お気に入り解除
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    className={`${authorized ? "ghost-btn favorite-remove-btn" : "hidden"}`}
-                    onClick={() => handleAddFavorites(selected.id)}
-                  >
-                    <Heart size={16} />
-                    お気に入り登録
-                  </button>
-                )}
-
-                <button
-                  type="button"
-                  className="reserve-btn"
-                  onClick={() => handleReserveButtonClick(selected.urls.pc)}
-                >
-                  <CalendarCheck size={16} />
-                  予約する
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {confirmTarget && (
-          <div className="confirm-overlay" onClick={cancelRemoveFavorite}>
-            <div
-              className="confirm-dialog"
-              role="alertdialog"
-              aria-modal="true"
-              aria-labelledby="confirm-title"
-              aria-describedby="confirm-body"
-              tabIndex={-1}
-              ref={confirmDialogRef}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="confirm-icon-wrap" aria-hidden="true">
-                <AlertTriangle size={22} />
-              </div>
-
-              <h2 id="confirm-title" className="confirm-title">
-                お気に入りを解除しますか？
-              </h2>
-              <p id="confirm-body" className="confirm-body">
-                「{confirmTarget.name}」をお気に入りから削除します。
-              </p>
-
-              <div className="confirm-actions">
-                <button
-                  type="button"
-                  className="confirm-cancel-btn"
-                  onClick={cancelRemoveFavorite}
-                >
-                  キャンセル
-                </button>
-                <button
-                  type="button"
-                  className="confirm-danger-btn"
-                  onClick={() => confirmRemoveFavorite(confirmTarget)}
-                >
-                  <HeartOff size={16} />
-                  削除する
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+      {/* 削除確認ダイアログ */}
+      {selected && confirmTarget && (
+        <ConfirmDialog
+          target={confirmTarget}
+          setSelectedId={setSelectedId}
+          confirmRemoveFavorite={confirmRemoveFavorite}
+          setConfirmTarget={setConfirmTarget}
+        />
+      )}
     </>
   );
 }

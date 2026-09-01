@@ -1,8 +1,11 @@
 "use client";
 
 import { Menu, X } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { CiLocationOn } from "react-icons/ci";
+import { IoPersonCircleOutline } from "react-icons/io5";
 import { toast } from "sonner";
 
 const NAV_LINKS = [
@@ -32,53 +35,29 @@ export function HeaderLoggedIn() {
   };
 
   return (
-    <header className="header-main">
-      <div
-        className={menuOpen ? "overlay" : ""}
-        onClick={() => {
-          setMenuOpen(false);
-        }}
-      ></div>
-      <div className="header-contents">
-        <div className="header__bar">
-          <div className="header__actions">
-            <div className="header__buttons">
-              <button
-                type="button"
-                className="header__logoutButton"
-                onClick={handleLogout}
-              >
-                ログアウト
-              </button>
-            </div>
-            <button
-              type="button"
-              className="header__menuButton"
-              onClick={() => setMenuOpen((v) => !v)}
-              aria-label={menuOpen ? "メニューを閉じる" : "メニューを開く"}
-              aria-expanded={menuOpen}
-            >
-              {menuOpen ? (
-                <X size={20} strokeWidth={1.75} />
-              ) : (
-                <Menu size={20} strokeWidth={1.75} />
-              )}
-            </button>
-          </div>
-        </div>
-        {menuOpen && (
-          <nav className="header__drawer" aria-label="メインメニュー">
-            {NAV_LINKS.map((link) => (
-              <a
-                key={link.label}
-                href={link.href}
-                className="header__drawerLink"
-              >
-                {link.label}
-              </a>
-            ))}
-          </nav>
-        )}
+    <header className="mt-2 fixed top-0 left-0 w-full z-50 flex items-center justify-between px-container-margin py-xs bg-surface/80 dark:bg-surface/80 backdrop-blur-xl shadow-sm">
+      <div className="flex items-center gap-sm">
+        <Link
+          href={"/"}
+          className="text-primary hover:bg-surface-variant/50 transition-all duration-300 active:scale-95 p-2 rounded-full flex items-center justify-center"
+        >
+          <span className="material-symbols-outlined" data-icon="location_on">
+            <CiLocationOn className="scale-13" />
+          </span>
+        </Link>
+        <h1 className="font-headline-md text-headline-md font-bold text-primary">
+          Izakaya Finder
+        </h1>
+      </div>
+      <div className="flex items-center">
+        <Link
+          href={"/profile"}
+          className="hover:bg-surface-variant/50 transition-all duration-300 active:scale-95 p-2 rounded-full flex items-center justify-center"
+        >
+          <span className="material-symbols-outlined text-on-surface-variant">
+            <IoPersonCircleOutline className="scale-13" />
+          </span>
+        </Link>
       </div>
     </header>
   );
