@@ -45,9 +45,8 @@ export type RestaurantType = {
   lng: number;
   open: string;
   photo: {
-    mobile: {
+    pc: {
       l: string;
-      s: string;
     };
   };
   urls: {
@@ -64,6 +63,8 @@ export type RestaurantType = {
   };
   created_at: string;
   name_kana: string;
+  catch: string;
+  mobile_access: string;
 };
 
 export type ShopsType = RestaurantType & {

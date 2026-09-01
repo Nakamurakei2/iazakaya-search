@@ -1,19 +1,20 @@
 "use client";
 
-import { Mail, Lock, User } from "lucide-react";
-import Link from "next/link";
+import { useState } from "react";
+import { ArrowRight, Eye, EyeOff, Lock, Mail, UserRound } from "lucide-react";
+import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
 
 type SignupFormValues = {
-  username: string;
+  fullName: string;
   email: string;
   password: string;
-  confirmPassword: string;
 };
 
-export default function SignupForm() {
+export default function SignupPage() {
+  const [showPassword, setShowPassword] = useState(false);
+
   const router = useRouter();
   const {
     register,
@@ -62,80 +63,99 @@ export default function SignupForm() {
   };
 
   return (
-    <div>
-      <div className="auth">
-        <div className="auth__card">
-          <div className="auth__tabs">
-            <Link href="/login" className="auth__tab">
-              ログイン
-            </Link>
-            <Link href="/signup" className="auth__tab auth__tab--active">
-              新規登録
-            </Link>
+    <div className="relative flex min-h-[100dvh] w-full items-center justify-center overflow-hidden bg-[#131313] px-5 py-12 text-[#e5e2e1]">
+      {/* Background */}
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,140,0,0.15)_0%,transparent_60%),radial-gradient(circle_at_bottom_left,rgba(255,140,0,0.05)_0%,transparent_50%)]" />
+
+      <div className="pointer-events-none absolute inset-0 z-0 bg-cover bg-center opacity-20" />
+
+      {/* Main */}
+      <div className="relative z-10 mx-auto flex w-full max-w-md flex-col justify-center">
+        {/* Header */}
+        <div className="mb-8 text-center">
+          <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-full bg-[#353534] shadow-[0_10px_30px_rgba(255,140,0,0.15)]">
+            <span className="text-[32px] text-[#ffb77d]">🔥</span>
           </div>
 
-          <form className="auth__form" onSubmit={handleSubmit(onSubmit)}>
-            <div className="auth__field">
-              <label className="auth__label" htmlFor="signup-name">
-                お名前
+          <h1 className="mb-2 text-[28px] font-bold leading-9 text-[#e5e2e1] md:text-[40px] md:leading-[48px]">
+            Create your account
+          </h1>
+
+          <p className="text-[16px] leading-6 text-[#ddc1ae]">
+            Join Amber Lantern and discover the night.
+          </p>
+        </div>
+
+        {/* Form Card */}
+        <div className="w-full rounded-[24px] border border-[#353534]/50 bg-[#353534]/80 p-6 shadow-[0_10px_30px_rgba(255,140,0,0.08)] backdrop-blur-xl md:p-8">
+          <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
+            {/* Full Name */}
+            <div className="mt-8">
+              <label
+                htmlFor="fullName"
+                className="mb-2 block text-[14px] font-bold leading-5 text-[#e5e2e1]"
+              >
+                Full Name
               </label>
-              <div className="auth__inputWrap">
-                <User
-                  size={16}
-                  strokeWidth={1.75}
-                  className="auth__inputIcon"
-                />
+
+              <div className="relative">
+                <UserRound className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#ddc1ae]" />
+
                 <input
-                  id="signup-name"
+                  id="fullName"
                   type="text"
-                  className="auth__input"
-                  placeholder="山田 太郎"
-                  {...register("username", {
+                  placeholder="Taro Yamada"
+                  className="w-full rounded-lg border border-[#564334] bg-[#1c1b1b] py-3 pl-12 pr-4 text-[16px] leading-6 text-[#e5e2e1] outline-none transition-colors placeholder:text-[#ddc1ae]/50 focus:border-[#ffb77d] focus:ring-1 focus:ring-[#ffb77d]"
+                  {...register("fullName", {
                     required: "お名前を入力してください",
                   })}
                 />
+                <p className="error-message">{errors.fullName?.message}</p>
               </div>
-              <p className="error-message">{errors.username?.message}</p>
             </div>
 
-            <div className="auth__field">
-              <label className="auth__label" htmlFor="signup-email">
-                メールアドレス
+            {/* Email */}
+            <div className="mt-8">
+              <label
+                htmlFor="email"
+                className="mb-2 block text-[14px] font-bold leading-5 text-[#e5e2e1]"
+              >
+                Email Address
               </label>
-              <div className="auth__inputWrap">
-                <Mail
-                  size={16}
-                  strokeWidth={1.75}
-                  className="auth__inputIcon"
-                />
+
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#ddc1ae]" />
+
                 <input
-                  id="signup-email"
+                  id="email"
                   type="email"
-                  className="auth__input"
-                  placeholder="you@example.com"
+                  placeholder="taro@example.com"
+                  className="w-full rounded-lg border border-[#564334] bg-[#1c1b1b] py-3 pl-12 pr-4 text-[16px] leading-6 text-[#e5e2e1] outline-none transition-colors placeholder:text-[#ddc1ae]/50 focus:border-[#ffb77d] focus:ring-1 focus:ring-[#ffb77d]"
                   {...register("email", {
                     required: "メールアドレスを入力してください",
                   })}
                 />
+                <p className="error-message">{errors.email?.message}</p>
               </div>
-              <p className="error-message">{errors.email?.message}</p>
             </div>
 
-            <div className="auth__field">
-              <label className="auth__label" htmlFor="signup-password">
-                パスワード
+            {/* Password */}
+            <div className="mt-8">
+              <label
+                htmlFor="password"
+                className="mb-2 block text-[14px] font-bold leading-5 text-[#e5e2e1]"
+              >
+                Password
               </label>
-              <div className="auth__inputWrap">
-                <Lock
-                  size={16}
-                  strokeWidth={1.75}
-                  className="auth__inputIcon"
-                />
+
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#ddc1ae]" />
+
                 <input
-                  id="signup-password"
-                  type="password"
-                  className="auth__input"
-                  placeholder="5文字以上"
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  className="w-full rounded-lg border border-[#564334] bg-[#1c1b1b] py-3 pl-12 pr-12 text-[16px] leading-6 text-[#e5e2e1] outline-none transition-colors placeholder:text-[#ddc1ae]/50 focus:border-[#ffb77d] focus:ring-1 focus:ring-[#ffb77d]"
                   {...register("password", {
                     required: "パスワードを入力してください",
                     minLength: {
@@ -144,58 +164,45 @@ export default function SignupForm() {
                     },
                   })}
                 />
+                <p className="error-message">{errors.password?.message}</p>
+
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  aria-label={
+                    showPassword ? "パスワードを隠す" : "パスワードを表示"
+                  }
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[#ddc1ae] transition-colors hover:text-[#ffb77d]"
+                >
+                  {showPassword ? (
+                    <Eye className="h-5 w-5" />
+                  ) : (
+                    <EyeOff className="h-5 w-5" />
+                  )}
+                </button>
               </div>
-              <p className="error-message">{errors.password?.message}</p>
             </div>
 
-            <div className="auth__field">
-              <label className="auth__label" htmlFor="signup-password-confirm">
-                パスワード（確認）
-              </label>
-              <div className="auth__inputWrap">
-                <Lock
-                  size={16}
-                  strokeWidth={1.75}
-                  className="auth__inputIcon"
-                />
-                <input
-                  id="signup-password-confirm"
-                  type="password"
-                  className="auth__input"
-                  placeholder="もう一度入力してください"
-                  {...register("confirmPassword", {
-                    required: "確認用パスワードを入力してください",
-                    minLength: {
-                      value: 5,
-                      message: "パスワードは5文字以上で入力してください",
-                    },
-                  })}
-                />
-              </div>
-              <p className="error-message">{errors.confirmPassword?.message}</p>
-            </div>
-
+            {/* Submit */}
             <button
               type="submit"
-              className="auth__submit"
-              disabled={isSubmitting}
+              className="mt-8 flex w-full items-center justify-center gap-2 rounded-full bg-[#ff8c00] px-4 py-3 text-[18px] font-bold leading-7 text-[#623200] shadow-lg transition-colors duration-300 hover:bg-[#ffdcc3] active:scale-[0.98]"
             >
-              アカウントを作成
+              Create Account
+              <ArrowRight className="h-5 w-5" />
             </button>
           </form>
+        </div>
 
-          <p className="auth__switchText">
-            すでにアカウントをお持ちの方は
-            <Link href="/login" className="auth__switchLink">
-              ログイン
-            </Link>
-          </p>
-
-          <p className="auth__switchText">
-            <Link href="/" className="auth__switchLink">
-              登録せずに利用する場合はこちらから
-            </Link>
-          </p>
+        {/* Login */}
+        <div className="mt-8 text-center text-[16px] leading-6 text-[#ddc1ae]">
+          Already have an account?{" "}
+          <a
+            href="/login"
+            className="font-bold text-[#ffb77d] underline-offset-4 transition-colors hover:text-[#ffdcc3] hover:underline"
+          >
+            Login here
+          </a>
         </div>
       </div>
     </div>

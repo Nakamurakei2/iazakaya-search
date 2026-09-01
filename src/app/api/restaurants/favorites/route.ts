@@ -30,10 +30,9 @@ export async function GET(req: NextRequest) {
         WHERE user_id = $1
         ORDER BY created_at DESC
       `;
+
       const resolvedUserId =
-        typeof userId === "function"
-          ? (userId as () => string)()
-          : String(userId);
+        typeof userId === "function" ? userId() : String(userId);
 
       const params: (string | number)[] = [resolvedUserId];
 
@@ -46,10 +45,15 @@ export async function GET(req: NextRequest) {
         params.push(Number(limit), Number(offset));
       }
 
-      const countQuery = `SELECT COUNT(*) FROM favorites WHERE user_id = $1`;
+      const countQuery = `
+        SELECT COUNT(*)
+        FROM favorites
+        WHERE user_id = $1
+      `;
+
       const [result, countResult] = await Promise.all([
-        pool.query(query, [userId, limit, offset]),
-        pool.query(countQuery, [userId]),
+        pool.query(query, params),
+        pool.query(countQuery, [resolvedUserId]),
       ]);
 
       const rows: FavoriteItem[] = result.rows;

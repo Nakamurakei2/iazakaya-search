@@ -3,7 +3,6 @@ import IzakayaSearchApp from "./mainForm";
 import jwt from "jsonwebtoken";
 
 export default async function MainPage() {
-  console.log("server side");
   const cookieStore = await cookies();
   const token = cookieStore.get("auth_token")?.value;
 

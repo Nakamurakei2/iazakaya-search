@@ -1,56 +1,30 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { RestaurantType } from "@/types/restaurant";
 import Link from "next/link";
-import {
-  HeartOff,
-  MapPin,
-  Wallet,
-  ChevronDown,
-  Flame,
-  X,
-  Users,
-  CalendarCheck,
-  Clock,
-  AlertTriangle,
-} from "lucide-react";
-import { FavoriteItem, GENRE_STYLE, RestaurantType } from "@/types/restaurant";
-import { toast } from "sonner";
-import { Pagination } from "@/components/pagination";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { MdFavorite, MdFavoriteBorder, MdSearch } from "react-icons/md";
 
 type SortKey = "recent" | "name";
-type FavoriteFromProps = {
+
+type Props = {
   data: RestaurantType[];
   totalFavorites: string;
 };
 
-const LIMIT = 20;
-
-export default function FavoriteForm(props: FavoriteFromProps) {
+export default function FavoritesForm(props: Props) {
   const { data, totalFavorites } = props;
-
   const router = useRouter();
-
   const [favorites, setFavorites] = useState<RestaurantType[]>(data);
-  const [selectedId, setSelectedId] = useState<string>("");
   const [sortKey, setSortKey] = useState<SortKey>("recent");
-  const dialogRef = useRef<HTMLDivElement>(null);
-  const [confirmTarget, setConfirmTarget] = useState<RestaurantType | null>(
-    null,
-  ); // 削除確認ダイアログ
-  const confirmDialogRef = useRef<HTMLDivElement>(null);
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const selected = favorites.find((s) => s.id === selectedId) || null;
+  const [favoriteIds, setFavoriteIds] = useState<string[]>([]); // お気に入り登録
 
-  const paginateTotalPage = Math.ceil(Number(totalFavorites) / LIMIT); // ページネーションの合計ページ数
-
-  console.log("paginateTotalPage", paginateTotalPage);
-
-  useEffect(() => {
-    if (selected && dialogRef.current) dialogRef.current.focus();
-  }, [selected]);
-
+  // const handleRemoveFavorite = (restaurantId: number) => {
+  //   setFavorites((prev) =>
+  //     prev.filter((favorite) => favorite.id !== restaurantId),
+  //   );
+  // };
   // 並び替え後のレストラン
   const sortFavorites = (favorites: RestaurantType[], sortKey: SortKey) => {
     return [...favorites].sort((a, b) => {
@@ -70,461 +44,151 @@ export default function FavoriteForm(props: FavoriteFromProps) {
 
   const handleRemoveFavorite = () => {
     // 削除確認ダイアログを表示させる
-    setConfirmTarget(selected);
+    // setConfirmTarget(selected);
   };
 
-  /**
-   * 「キャンセル」ボタン押下時処理
-   */
-  const cancelRemoveFavorite = () => {
-    setConfirmTarget(null);
-  };
-
-  /**
-   * 「削除する」ボタン押下時処理
-   */
-  const confirmRemoveFavorite = async (
-    target: RestaurantType,
-  ): Promise<void> => {
-    const { id } = target;
-    try {
-      const res = await fetch(`/api/restaurants/${id}/favorites`, {
-        method: "DELETE",
-        credentials: "include",
-        cache: "no-store",
-        signal: AbortSignal.timeout(10000),
-      });
-      const resData = await res.json();
-      if (!res.ok) {
-        toast.error(resData.message);
-        return;
-      }
-      toast.success(resData.message); // 店名込みで表示させた方が良い？
-      setConfirmTarget(null); // モーダル閉じる
-      setSelectedId(""); // 詳細モーダルを閉じる
-
-      // ★ 併せて、削除した店舗をこの場で favorites からも取り除く
-      //   （router.refresh() 完了までのタイムラグで一覧に残って見えるのを防ぐ）
-      setFavorites((prev) => prev.filter((f) => f.id !== id));
-      router.refresh();
-    } catch (e: unknown) {
-      if (e instanceof TypeError) {
-        console.error("ネットワークエラーが発生しました:", e.message);
-        // ユーザーへの通知: "インターネットに接続されていません。回線状況を確認してください。"
-        toast.error(
-          "インターネットに接続されていません。回線状況を確認してください。",
-        );
-        return;
-      }
-
-      console.error("予期せぬエラー", e);
-      toast.error(
-        "予期せぬエラーが発生しました。時間を押してから再度実行してください",
-      );
-    }
-  };
-
-  /**
-   * ページネーションの前ボタン押下時処理
-   */
-  const handlePaginatePrevious = async () => {
-    // 1ページ目より前には戻れない
-    if (currentPage <= 1) return;
-
-    const prevPage = currentPage - 1;
-    const offset = LIMIT * (prevPage - 1);
-
-    const prevFavorites = await fetchFavoritesPage(offset);
-    if (prevFavorites === null) return; // エラー時は toast 済みなので何もしない
-
-    setFavorites(prevFavorites);
-    setCurrentPage(prevPage);
-    window.scrollTo({ top: 0, behavior: "instant" });
-  };
-
-  /**
-   * ページネーション次ボタン押下時処理
-   */
-  const handlePaginateNext = async () => {
-    const nextPage = currentPage + 1;
-    const offset = LIMIT * currentPage; // = LIMIT * (nextPage - 1)
-
-    const nextFavorites = await fetchFavoritesPage(offset);
-    if (nextFavorites === null) return; // エラー時は toast 済みなので何もしない
-
-    setFavorites(nextFavorites);
-    setCurrentPage(nextPage);
-    window.scrollTo({ top: 0, behavior: "instant" });
-  };
-
-  /**
-   * ページネーションのボタン押下時処理
-   */
-  const handlePaginateButtonClick = async (num: number) => {
-    const nextFavorites = await fetchFavoritesPage((num - 1) * LIMIT);
-    if (nextFavorites === null) return; // エラー時は toast 済みなので何もしない
-
-    setFavorites(nextFavorites);
-    setCurrentPage(num);
-    window.scrollTo({ top: 0, behavior: "instant" });
-  };
-
-  /**
-   * 「予約する」ボタン押下時処理
-   */
-  const handleReserveButtonClick = (url: string) => {
-    window.open(url, "_blank", "noopener,noreferrer");
-  };
+  console.log("sortedFavorites", sortedFavorites);
 
   return (
-    <div className="page">
-      <div className="ambient-glow" aria-hidden="true" />
+    <div className="min-h-screen bg-[#131313] pb-32 text-[#e5e2e1]">
+      {/* Main */}
+      <div className="mx-auto max-w-[1200px] px-5 pb-24 pt-24">
+        {/* Page Title */}
+        <div className="mb-8 flex items-end justify-between">
+          <div>
+            <h2 className="mb-2 text-[28px] font-bold leading-9 text-[#ffb77d] md:text-[32px] md:leading-10">
+              Favorites
+            </h2>
 
-      {/* ヘッダー */}
-      <header className="header">
-        <div className="brand-row">
-          <span className="lantern-dot" aria-hidden="true" />
-          <h1 className="brand-title">お気に入り</h1>
-        </div>
-        <p className="brand-sub">保存した店舗はここからいつでも確認できます</p>
-      </header>
-
-      <div className="display-row">
-        <div className="result-meta margin-none">
-          <span>{totalFavorites}件 保存中</span>
-        </div>
-
-        <div className="sort-select-wrap">
-          <div className="sort-select-inner">
-            <select
-              className="sort-select"
-              value={sortKey}
-              onChange={(e) => setSortKey(e.target.value as SortKey)}
-              aria-label="お気に入りの並び替え"
-            >
-              <option value="recent">追加した順</option>
-              <option value="name">店名順</option>
-            </select>
-            <ChevronDown
-              size={14}
-              className="sort-select-caret"
-              aria-hidden="true"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* 一覧 */}
-      <main className="list">
-        {favorites.length === 0 && (
-          <div className="empty-state favorite-empty-state">
-            <div className="favorite-empty-icon">
-              <HeartOff size={26} />
-            </div>
-            <p className="empty-title">お気に入りはまだありません</p>
-            <p className="empty-body">
-              気になったお店をハートマークでお気に入りに追加すると、ここに表示されます。
+            <p className="text-[14px] leading-6 text-[#ddc1ae]">
+              Your saved spots for the perfect night out.
             </p>
-            <Link href="/" className="submit-btn favorite-empty-cta">
-              お店を探す
+          </div>
+
+          <span className="text-[14px] rounded-full bg-[#c68315]/20 px-3 py-1 text-sm font-bold text-[#ffb95a]">
+            {favorites.length} Saved
+          </span>
+        </div>
+
+        {/* Favorites */}
+        {favorites.length > 0 ? (
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {sortedFavorites.map((favorite) => (
+              <div
+                key={favorite.id}
+                className="relative overflow-hidden rounded-[24px] bg-[#2a2a2a] shadow-[0px_10px_30px_rgba(255,140,0,0.08)] transition-transform hover:-translate-y-1"
+              >
+                {/* Image */}
+                <div className="relative h-48 w-full">
+                  <img
+                    src={favorite.photo.pc.l}
+                    alt={favorite.name}
+                    className="h-full w-full object-cover"
+                  />
+
+                  {/* Gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+
+                  {/* Genre / Rating */}
+                  <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between">
+                    {/* <span className="rounded bg-[#ffb77d]/80 px-2 py-1 text-xs font-semibold uppercase tracking-wider text-white">
+                      {favorite.genre}
+                    </span> */}
+                  </div>
+
+                  {/* Favorite Button */}
+                  <button
+                    type="button"
+                    // onClick={() => handleRemoveFavorite(favorite.id)}
+                    aria-label={`${favorite.name}をお気に入りから削除`}
+                    className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-[#131313]/50 text-[#ffb77d] backdrop-blur-md transition-colors hover:bg-[#131313]/80"
+                  >
+                    <MdFavorite className="text-xl" />
+                  </button>
+                </div>
+
+                {/* Card Content */}
+                <div className="p-4">
+                  <h3 className="mb-1 text-2xl font-bold leading-8 text-[#e5e2e1]">
+                    {favorite.name}
+                  </h3>
+                  {/* 
+                  <p className="mb-4 flex items-center text-[16px] leading-6 text-[#ddc1ae]">
+                    <MdLocationOn className="mr-1 text-sm opacity-70 scale-14 mt-2" />
+                    <span>
+                      <b className="font-bold">
+                         {favorite.distanceKm < 1
+                          ? `${Math.round(shop.distanceKm * 1000)}m`
+                          : `${favorite.distanceKm.toFixed(2)}km`} 
+                      </b>
+                    </span>
+                  </p> */}
+
+                  <div className="flex gap-2">
+                    <Link
+                      href={`/restaurant/${favorite.id}`}
+                      className="flex-1 rounded-lg bg-[#353534] py-2 text-center text-sm font-bold text-[#e5e2e1] transition-colors hover:bg-[#393939]"
+                    >
+                      Details
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          /* Empty State */
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="mb-6 flex h-32 w-32 items-center justify-center rounded-full bg-[#353534] opacity-50">
+              <MdFavoriteBorder className="text-[64px] text-[#ddc1ae]" />
+            </div>
+
+            <h3 className="mb-2 text-2xl font-bold leading-8 text-[#e5e2e1]">
+              No favorites yet
+            </h3>
+
+            <p className="mb-8 max-w-sm text-[16px] leading-6 text-[#ddc1ae]">
+              Start exploring and save your favorite Izakayas for your next
+              night out.
+            </p>
+
+            <Link
+              href="/"
+              className="flex items-center gap-2 rounded-full bg-[#ffb77d] px-8 py-4 text-sm font-bold text-[#4d2600] transition-colors hover:bg-[#ffdcc3]"
+            >
+              <MdSearch className="text-xl" />
+              Go Search
             </Link>
           </div>
         )}
+      </div>
 
-        {sortedFavorites.map((shop) => {
-          const style = GENRE_STYLE[shop.genre.code] || { c: "#8C6A4E" };
-          return (
-            <div key={shop.id} className="card favorite-card">
-              <div
-                className="card-stripe"
-                style={{ background: style.c }}
-                aria-hidden="true"
-              />
+      {/* Desktop Navigation */}
+      {/* <nav className="fixed right-5 top-0 z-50 hidden h-[72px] items-center gap-6 text-sm font-bold text-[#ddc1ae] md:flex">
+        <Link
+          href="/"
+          className="flex items-center gap-2 transition-colors hover:text-[#ffb77d]"
+        >
+          <MdSearch />
+          Search
+        </Link>
 
-              <button
-                type="button"
-                className="card-body favorite-card-body"
-                onClick={() => setSelectedId(shop.id)}
-                aria-haspopup="dialog"
-              >
-                <div className="card-top-row">
-                  <h2 className="card-name">{shop.name}</h2>
+        <Link
+          href="/favorites"
+          className="flex items-center gap-2 text-[#ffb77d]"
+        >
+          <MdFavorite />
+          Favorites
+        </Link>
 
-                  <div className="genre-column">
-                    <span
-                      className="genre-tag"
-                      style={{ color: style.c, borderColor: style.c }}
-                    >
-                      {shop.genre.name}
-                    </span>
-
-                    {shop.sub_genre ? (
-                      <span
-                        className="genre-tag"
-                        style={{
-                          color:
-                            GENRE_STYLE[shop.sub_genre.code]?.c ?? "#888888",
-                          borderColor:
-                            GENRE_STYLE[shop.sub_genre.code]?.c ?? "#888888",
-                        }}
-                      >
-                        {shop.sub_genre.name}
-                      </span>
-                    ) : null}
-                  </div>
-                </div>
-
-                <div className="card-meta-row">
-                  <span className="meta-item">
-                    <MapPin size={12} className="meta-icon" />
-                    {shop.station_name}駅
-                  </span>
-                  <span className="meta-item">
-                    <Wallet size={12} className="meta-icon" />
-                    {shop.budget.name}
-                  </span>
-                </div>
-              </button>
-            </div>
-          );
-        })}
-      </main>
-
-      {/* 詳細ダイアログ */}
-      {selected && (
-        <div className="overlay" onClick={() => setSelectedId("")}>
-          <div
-            className="dialog"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="dialog-title"
-            tabIndex={-1}
-            ref={dialogRef}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="dialog-header-img">
-              <Flame size={34} className="dialog-flame" />
-              <button
-                className="dialog-close"
-                onClick={() => setSelectedId("")}
-                aria-label="閉じる"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="dialog-scroll">
-              <div className="dialog-top-row">
-                <h2 id="dialog-title" className="dialog-title">
-                  {selected.name}
-                </h2>
-                <div className="genre-column">
-                  <span
-                    className="genre-tag"
-                    style={{
-                      color: (GENRE_STYLE[selected.genre.code] || {}).c,
-                      borderColor: (GENRE_STYLE[selected.genre.code] || {}).c,
-                    }}
-                  >
-                    {selected.genre.name}
-                  </span>
-                  {selected.sub_genre ? (
-                    <span
-                      className="genre-tag"
-                      style={{
-                        color:
-                          GENRE_STYLE[selected.sub_genre.code]?.c ?? "#888888",
-                        borderColor:
-                          GENRE_STYLE[selected.sub_genre.code]?.c ?? "#888888",
-                      }}
-                    >
-                      {selected.sub_genre.name}
-                    </span>
-                  ) : null}
-                </div>
-              </div>
-
-              <dl className="info-list">
-                <div className="info-row">
-                  <dt className="info-label">
-                    <MapPin size={13} className="meta-icon" />
-                    住所
-                  </dt>
-                  <dd className="info-value">
-                    {selected.station_name}駅 ／ {selected.access}
-                  </dd>
-                </div>
-
-                <div className="info-row">
-                  <dt className="info-label">
-                    <Clock size={13} className="meta-icon" />
-                    営業時間
-                  </dt>
-                  <dd className="info-value">
-                    {selected.open}（{selected.close}）
-                  </dd>
-                </div>
-
-                <div className="info-row">
-                  <dt className="info-label">
-                    <Wallet size={13} className="meta-icon" />
-                    予算目安
-                  </dt>
-                  <dd className="info-value">{selected.budget.name}</dd>
-                </div>
-
-                <div className="info-row">
-                  <dt className="info-label">
-                    <Users size={13} className="meta-icon" />
-                    席数
-                  </dt>
-                  <dd className="info-value">{selected.capacity}席</dd>
-                </div>
-              </dl>
-            </div>
-
-            <div className="dialog-footer favorite-dialog-footer">
-              <button
-                type="button"
-                className="ghost-btn favorite-remove-btn"
-                onClick={() => handleRemoveFavorite()}
-              >
-                <HeartOff size={16} />
-                お気に入り解除
-              </button>
-              <button
-                type="button"
-                className="reserve-btn"
-                onClick={() => handleReserveButtonClick(selected.urls.pc)}
-              >
-                <CalendarCheck size={16} />
-                予約する
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* お気に入り削除の確認モーダル */}
-      {confirmTarget && (
-        <div className="confirm-overlay" onClick={cancelRemoveFavorite}>
-          <div
-            className="confirm-dialog"
-            role="alertdialog"
-            aria-modal="true"
-            aria-labelledby="confirm-title"
-            aria-describedby="confirm-body"
-            tabIndex={-1}
-            ref={confirmDialogRef}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="confirm-icon-wrap" aria-hidden="true">
-              <AlertTriangle size={22} />
-            </div>
-
-            <h2 id="confirm-title" className="confirm-title">
-              お気に入りを解除しますか？
-            </h2>
-            <p id="confirm-body" className="confirm-body">
-              「{confirmTarget.name}」をお気に入りから削除します。
-            </p>
-
-            <div className="confirm-actions">
-              <button
-                type="button"
-                className="confirm-cancel-btn"
-                onClick={cancelRemoveFavorite}
-              >
-                キャンセル
-              </button>
-              <button
-                type="button"
-                className="confirm-danger-btn"
-                onClick={() => confirmRemoveFavorite(confirmTarget)}
-              >
-                <HeartOff size={16} />
-                削除する
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {paginateTotalPage > 0 && (
-        <Pagination
-          page={currentPage}
-          totalRestaurants={paginateTotalPage}
-          handlePaginatePrevious={handlePaginatePrevious}
-          handlePaginateNext={handlePaginateNext}
-          handlePaginateButtonClick={handlePaginateButtonClick}
-        />
-      )}
+        <Link
+          href="/recent"
+          className="flex items-center gap-2 transition-colors hover:text-[#ffb77d]"
+        >
+          <MdHistory />
+          Recent
+        </Link>
+      </nav> */}
     </div>
   );
 }
-
-/**
- * 指定した offset からお気に入り一覧を取得し、
- * レストラン詳細まで解決した配列を返す共通処理。
- * 取得に失敗した場合は toast でエラーを表示し null を返す。
- */
-const fetchFavoritesPage = async (
-  offset: number,
-): Promise<RestaurantType[] | null> => {
-  const params = new URLSearchParams({
-    limit: String(LIMIT),
-    offset: String(offset),
-  });
-
-  try {
-    const res = await fetch(`/api/restaurants/favorites?${params.toString()}`, {
-      method: "GET",
-      credentials: "include",
-      signal: AbortSignal.timeout(10000),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      toast.error(data.message);
-      return null;
-    }
-
-    const favoriteRestaurants: FavoriteItem[] = data.favoriteRestaurants;
-    const restaurants = await Promise.all(
-      favoriteRestaurants.map(async ({ restaurant_id, created_at }) => {
-        const detailParams = new URLSearchParams({ restaurant_id });
-        const detailRes = await fetch(
-          `/api/restaurants?${detailParams.toString()}`,
-          { method: "GET", signal: AbortSignal.timeout(10000) },
-        );
-        const detailData = await detailRes.json();
-
-        if (!detailRes.ok) {
-          return null;
-        }
-
-        return {
-          ...detailData.restaurants[0],
-          created_at,
-        };
-      }),
-    );
-
-    // 個別リクエストが失敗すると null が混ざるためフィルタしておく
-    return restaurants.filter((r): r is RestaurantType => r !== null);
-  } catch (e: unknown) {
-    if (e instanceof TypeError) {
-      console.error("ネットワークエラーが発生しました:", e.message);
-      // ユーザーへの通知: "インターネットに接続されていません。回線状況を確認してください。"
-      toast.error(
-        "インターネットに接続されていません。回線状況を確認してください。",
-      );
-      return null;
-    }
-
-    console.error("予期せぬエラー", e);
-    toast.error(
-      "予期せぬエラーが発生しました。時間を押してから再度実行してください",
-    );
-    return null;
-  }
-};
