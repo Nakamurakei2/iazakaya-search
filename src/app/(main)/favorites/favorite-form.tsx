@@ -156,6 +156,8 @@ export default function FavoritesForm(props: Props) {
                   <h3 className="mb-1 text-xl font-bold leading-8 text-[#e5e2e1]">
                     {favorite.name}
                   </h3>
+
+                  <p>{favorite.catch}</p>
                   <div className="flex flex-wrap gap-2 pt-sm rounded-3xl mt-3 mb-5">
                     <span
                       className="genre-tag genre-tag-custom"

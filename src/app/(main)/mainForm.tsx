@@ -1,9 +1,14 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Search } from "lucide-react";
-import { Pagination } from "@/components/pagination";
-import { handleLocationSearch, handleSearch } from "@/services/restaurant-api";
+import { Search, Tags } from "lucide-react";
+import {
+  handleLocationSearch,
+  handlePaginateButtonClick,
+  handlePaginateNext,
+  handlePaginatePrevious,
+  handleSearch,
+} from "@/services/restaurant-api";
 import {
   FavoriteItem,
   GENRE_STYLE,
@@ -18,6 +23,7 @@ import { IoBeer } from "react-icons/io5";
 import { IoMdTrain } from "react-icons/io";
 import { Dialog } from "@/components/dialog";
 import { ConfirmDialog } from "@/components/confirmDailog";
+import { Pagination } from "@/components/pagination";
 
 type MainProps = {
   authorized: boolean;
@@ -30,14 +36,19 @@ const GENRE_OPTIONS = [
   { code: "G002", name: "ダイニングバー・バル" },
   { code: "G003", name: "創作料理" },
   { code: "G004", name: "和食" },
+  { code: "G005", name: "洋食" },
+  { code: "G006", name: "イタリアン・フレンチ" },
+  { code: "G007", name: "中華" },
   { code: "G008", name: "焼肉・ホルモン" },
-  { code: "G013", name: "ラーメン" },
+  { code: "G009", name: "アジア・エスニック料理" },
+  { code: "G010", name: "各国料理" },
+  { code: "G011", name: "カラオケ・パーティ" },
   { code: "G012", name: "バー・カクテル" },
+  { code: "G013", name: "ラーメン" },
   { code: "G016", name: "お好み焼き・もんじゃ" },
+  { code: "G017", name: "カフェ・スイーツ" },
   { code: "G014", name: "その他" },
 ] as const;
-
-const IZAKAYA_GENRE_CODE = "G001";
 
 export default function IzakayaSearchApp(props: MainProps) {
   const { authorized } = props;
@@ -50,9 +61,8 @@ export default function IzakayaSearchApp(props: MainProps) {
   const [isLocating, setIsLocating] = useState(false); // 読み込み中を表す
   const [locationNotice, setLocationNotice] = useState<string>(""); // 距離についての文言
   const dialogRef = useRef(null);
-  const [menuOpen, setMenuOpen] = useState(false);
   const [totalRestaurants, setTotalRestaurants] = useState<number>(0); // 該当したレストラン総数
-  const [pageSize, setPageSize] = useState(20); // 取得件数
+  const [pageSize, setPageSize] = useState(10); // 取得件数
   const [startPage, setStartPage] = useState(1); // 検索の開始位置
   const [currentLocationData, setCurrentLocationData] =
     useState<Location | null>(null); // 現在地格納
@@ -79,18 +89,8 @@ export default function IzakayaSearchApp(props: MainProps) {
   };
 
   const handleApplyAdvancedSearch = () => {
+    // 検索した内容を保持したい
     setIsAdvancedOpen(false);
-  };
-
-  const handleQuickIzakayaFilter = () => {
-    setSelectedGenres([IZAKAYA_GENRE_CODE]);
-  };
-
-  /**
-   * 「キャンセル」ボタン押下時処理
-   */
-  const cancelRemoveFavorite = () => {
-    setConfirmTarget(null);
   };
 
   /**
@@ -205,7 +205,7 @@ export default function IzakayaSearchApp(props: MainProps) {
   const handleDescriptionModal = async (shop: ShopsType) => {
     setSelectedId(shop.id);
 
-    // ここで履歴テーブルに追加
+    // ここで履歴テ
     const res = await fetch(`/api/restaurants/${shop.id}/recent`, {
       method: "POST",
       headers: {
@@ -281,60 +281,116 @@ export default function IzakayaSearchApp(props: MainProps) {
             現在地周辺から探す
           </button>
         </section>
-        <section className="col-span-4 md:col-span-12 mb-lg">
-          <h3 className="font-body-lg text-body-lg text-on-surface-variant mb-sm">
-            最近の検索・よく行くエリア
-          </h3>
-          <div className="flex gap-sm overflow-x-auto pb-sm scrollbar-hide snap-x">
-            <button className="bg-surface-container text-on-background px-sm py-2 rounded-full whitespace-nowrap flex items-center gap-base border border-outline-variant hover:border-primary transition-colors snap-start">
-              <span
-                className="material-symbols-outlined text-[18px] text-primary"
-                data-icon="train"
-              >
-                <IoMdTrain />
-              </span>
-              新宿駅
+        <section className="genre-search">
+          {/* ヘッダー */}
+          <div className="genre-search-header">
+            <div className="genre-search-title">
+              <Tags size={20} />
+              <h4>ジャンルから探す</h4>
+            </div>
+
+            <button
+              type="button"
+              className="genre-filter-button"
+              onClick={() => setIsAdvancedOpen((p) => !p)}
+            >
+              <Tags size={16} />
+              <span>詳細絞り込み</span>
             </button>
-            <button className="bg-surface-container text-on-background px-sm py-2 rounded-full whitespace-nowrap flex items-center gap-base border border-outline-variant hover:border-primary transition-colors snap-start">
-              <span
-                className="material-symbols-outlined text-[18px] text-primary"
-                data-icon="train"
-              >
-                <IoMdTrain />
-              </span>
-              渋谷駅
+          </div>
+
+          {/* ジャンル一覧 */}
+
+          {isAdvancedOpen && (
+            <div className="advanced-panel">
+              <div className="genre-chip-row">
+                {GENRE_OPTIONS.map((g) => {
+                  const active = selectedGenres.includes(g.code);
+                  const color =
+                    GENRE_STYLE[g.code as keyof typeof GENRE_STYLE]?.c ??
+                    "#8C6A4E";
+                  return (
+                    <button
+                      type="button"
+                      key={g.code}
+                      className={`genre-chip-btn ${
+                        active ? "genre-chip-btn--active" : ""
+                      }`}
+                      style={
+                        active
+                          ? { background: color, borderColor: color }
+                          : { borderColor: color, color }
+                      }
+                      onClick={() => toggleGenre(g.code)}
+                      aria-pressed={active}
+                    >
+                      {g.name}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="advanced-panel-actions">
+                <button
+                  type="button"
+                  className="advanced-clear-btn"
+                  onClick={handleClearGenres}
+                  disabled={selectedGenres.length === 0}
+                >
+                  クリア
+                </button>
+                <button
+                  type="button"
+                  className="advanced-apply-btn"
+                  onClick={handleApplyAdvancedSearch}
+                >
+                  この条件で登録
+                </button>
+              </div>
+            </div>
+          )}
+        </section>
+        <section className="recent-search-section" ref={scrollRef}>
+          <h3 className="recent-search-title">最近の検索</h3>
+
+          <div className="recent-search-list">
+            <button className="recent-search-item">
+              <IoMdTrain className="recent-search-icon recent-search-icon-primary" />
+              <span>新宿駅</span>
             </button>
-            <button className="bg-surface-container text-on-background px-sm py-2 rounded-full whitespace-nowrap flex items-center gap-base border border-outline-variant hover:border-primary transition-colors snap-start">
-              <span
-                className="material-symbols-outlined text-[18px] text-secondary"
-                data-icon="restaurant"
-              >
-                <MdOutlineRestaurant />
-              </span>
-              焼き鳥
+
+            <button className="recent-search-item">
+              <IoMdTrain className="recent-search-icon recent-search-icon-primary" />
+              <span>渋谷駅</span>
             </button>
-            <button className="bg-surface-container text-on-background px-sm py-2 rounded-full whitespace-nowrap flex items-center gap-base border border-outline-variant hover:border-primary transition-colors snap-start">
-              <span
-                className="material-symbols-outlined text-[18px] text-secondary"
-                data-icon="sports_bar"
-              >
-                <IoBeer />
-              </span>
-              クラフトビール
+
+            <button className="recent-search-item">
+              <MdOutlineRestaurant className="recent-search-icon recent-search-icon-secondary" />
+              <span>焼き鳥</span>
+            </button>
+
+            <button className="recent-search-item">
+              <IoBeer className="recent-search-icon recent-search-icon-secondary" />
+              <span>クラフトビール</span>
             </button>
           </div>
         </section>
         <section className="col-span-4 md:col-span-12">
-          <h3 className="font-headline-md text-headline-md text-on-background mb-md flex items-center gap-xs">
-            <span
-              className="material-symbols-outlined text-primary"
-              data-icon="star"
-              data-weight="fill"
-            >
-              <FaStar />
-            </span>
-            周辺のお店
-          </h3>
+          <div className="flex justify-between items-center mb-2">
+            <h3 className="font-headline-md text-headline-md text-on-background mb-md flex items-center gap-xs">
+              <span
+                className="material-symbols-outlined text-primary"
+                data-icon="star"
+                data-weight="fill"
+              >
+                <FaStar />
+              </span>
+              周辺のお店
+            </h3>
+            <p className="recent-search-icon-secondary">
+              {totalRestaurants !== 0 && `${totalRestaurants}件`}
+            </p>
+          </div>
 
           {/* 一覧 */}
           {shops?.length === 0 && (
@@ -346,7 +402,6 @@ export default function IzakayaSearchApp(props: MainProps) {
               </p>
             </div>
           )}
-
           {shops?.map((shop) => {
             const code = shop.genre.code;
             const style = GENRE_STYLE[code as keyof typeof GENRE_STYLE] || {
@@ -425,6 +480,47 @@ export default function IzakayaSearchApp(props: MainProps) {
           })}
         </section>
       </main>
+
+      {/* ページネーション */}
+      {Math.ceil(totalRestaurants / pageSize) > 1 && (
+        <Pagination
+          page={page}
+          totalRestaurants={Math.ceil(totalRestaurants / pageSize)}
+          handlePaginatePrevious={() =>
+            handlePaginatePrevious({
+              pageSize,
+              startPage,
+              currentLocationData,
+              setShops,
+              setPage,
+              setStartPage,
+              scrollRef,
+            })
+          }
+          handlePaginateNext={() =>
+            handlePaginateNext({
+              pageSize,
+              startPage,
+              currentLocationData,
+              setShops,
+              setPage,
+              setStartPage,
+              scrollRef,
+            })
+          }
+          handlePaginateButtonClick={(pageNumber: number) =>
+            handlePaginateButtonClick({
+              pageNumber,
+              setStartPage,
+              pageSize,
+              currentLocationData,
+              setShops,
+              setPage,
+              scrollRef,
+            })
+          }
+        />
+      )}
 
       {/* 詳細ダイアログ */}
       {selected && (
