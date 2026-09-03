@@ -1,30 +1,32 @@
 "use client";
 
-import { RestaurantType } from "@/types/restaurant";
+import { ConfirmDialog } from "@/components/confirmDailog";
+import { Dialog } from "@/components/dialog";
+import { GENRE_STYLE, RestaurantType, ShopsType } from "@/types/restaurant";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { FaBookmark } from "react-icons/fa6";
 import { MdFavorite, MdFavoriteBorder, MdSearch } from "react-icons/md";
+import { toast } from "sonner";
 
 type SortKey = "recent" | "name";
 
 type Props = {
-  data: RestaurantType[];
+  data: ShopsType[];
   totalFavorites: string;
 };
 
 export default function FavoritesForm(props: Props) {
   const { data, totalFavorites } = props;
   const router = useRouter();
-  const [favorites, setFavorites] = useState<RestaurantType[]>(data);
   const [sortKey, setSortKey] = useState<SortKey>("recent");
-  const [favoriteIds, setFavoriteIds] = useState<string[]>([]); // お気に入り登録
+  const [selectedId, setSelectedId] = useState<string>(""); // 詳細ダイアログ表示するためのレストランID
+  const [confirmTarget, setConfirmTarget] = useState<ShopsType | null>(null); // 削除確認ダイアログ
+  const selected = data?.find((s) => s.id === selectedId) || null;
 
-  // const handleRemoveFavorite = (restaurantId: number) => {
-  //   setFavorites((prev) =>
-  //     prev.filter((favorite) => favorite.id !== restaurantId),
-  //   );
-  // };
+  const idList = data.map((item) => item.id);
+
   // 並び替え後のレストラン
   const sortFavorites = (favorites: RestaurantType[], sortKey: SortKey) => {
     return [...favorites].sort((a, b) => {
@@ -40,11 +42,53 @@ export default function FavoritesForm(props: Props) {
       );
     });
   };
-  const sortedFavorites = sortFavorites(favorites, sortKey);
+  const sortedFavorites = sortFavorites(data, sortKey);
 
-  const handleRemoveFavorite = () => {
-    // 削除確認ダイアログを表示させる
-    // setConfirmTarget(selected);
+  /**
+   * 「お気に入り解除」ボタン押下時処理
+   */
+  const handleRemoveFavorites = () => {
+    setConfirmTarget(selected);
+  };
+
+  /**
+   * 「削除する」ボタン押下時処理
+   */
+  const confirmRemoveFavorite = async (target: ShopsType): Promise<void> => {
+    const { id } = target;
+    try {
+      const res = await fetch(`/api/restaurants/${id}/favorites`, {
+        method: "DELETE",
+        credentials: "include",
+        cache: "no-store",
+        signal: AbortSignal.timeout(10000),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        toast.error(data.message);
+        return;
+      }
+      const data = await res.json();
+      toast.success(data.message); // 店名込みで表示させた方が良い？
+      setConfirmTarget(null); // モーダル閉じる
+      setSelectedId(""); // 詳細モーダルを閉じる
+
+      router.refresh(); // サーバーへ最新データを取得するリクエストを送り更新する
+    } catch (e: unknown) {
+      if (e instanceof TypeError) {
+        console.error("ネットワークエラーが発生しました:", e.message);
+        // ユーザーへの通知: "インターネットに接続されていません。回線状況を確認してください。"
+        toast.error(
+          "インターネットに接続されていません。回線状況を確認してください。",
+        );
+        return;
+      }
+
+      console.error("予期せぬエラー", e);
+      toast.error(
+        "予期せぬエラーが発生しました。時間を押してから再度実行してください",
+      );
+    }
   };
 
   return (
@@ -63,17 +107,19 @@ export default function FavoritesForm(props: Props) {
             </p>
           </div>
 
-          <span className="text-[14px] rounded-full bg-[#c68315]/20 px-3 py-1 text-sm font-bold text-[#ffb95a]">
-            {favorites.length} Saved
-          </span>
+          <div className="flex items-center gap-1.5 justify-center flex-row text-[14px] rounded-full bg-[#c68315]/20 px-3 py-1 text-sm font-bold text-[#ffb95a]">
+            <FaBookmark />
+            <span>{totalFavorites}</span>
+          </div>
         </div>
 
         {/* Favorites */}
-        {favorites.length > 0 ? (
+        {data.length > 0 ? (
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             {sortedFavorites.map((favorite) => (
               <div
                 key={favorite.id}
+                onClick={() => setSelectedId(favorite.id)}
                 className="relative overflow-hidden rounded-[24px] bg-[#2a2a2a] shadow-[0px_10px_30px_rgba(255,140,0,0.08)] transition-transform hover:-translate-y-1"
               >
                 {/* Image */}
@@ -107,9 +153,38 @@ export default function FavoritesForm(props: Props) {
 
                 {/* Card Content */}
                 <div className="p-4">
-                  <h3 className="mb-1 text-2xl font-bold leading-8 text-[#e5e2e1]">
+                  <h3 className="mb-1 text-xl font-bold leading-8 text-[#e5e2e1]">
                     {favorite.name}
                   </h3>
+                  <div className="flex flex-wrap gap-2 pt-sm rounded-3xl mt-3 mb-5">
+                    <span
+                      className="genre-tag genre-tag-custom"
+                      style={{
+                        backgroundColor:
+                          GENRE_STYLE[favorite.genre.code]?.c ?? "#888888",
+                        borderColor:
+                          GENRE_STYLE[favorite.genre.code]?.c ?? "#888888",
+                      }}
+                    >
+                      {favorite.genre.name}
+                    </span>
+
+                    {favorite.sub_genre ? (
+                      <span
+                        className="genre-tag genre-tag-custom"
+                        style={{
+                          backgroundColor:
+                            GENRE_STYLE[favorite.sub_genre.code]?.c ??
+                            "#888888",
+                          borderColor:
+                            GENRE_STYLE[favorite.sub_genre.code]?.c ??
+                            "#888888",
+                        }}
+                      >
+                        {favorite.sub_genre.name}
+                      </span>
+                    ) : null}
+                  </div>
                   {/* 
                   <p className="mb-4 flex items-center text-[16px] leading-6 text-[#ddc1ae]">
                     <MdLocationOn className="mr-1 text-sm opacity-70 scale-14 mt-2" />
@@ -122,14 +197,14 @@ export default function FavoritesForm(props: Props) {
                     </span>
                   </p> */}
 
-                  <div className="flex gap-2">
+                  {/* <div className="flex gap-2">
                     <Link
                       href={`/restaurant/${favorite.id}`}
                       className="flex-1 rounded-lg bg-[#353534] py-2 text-center text-sm font-bold text-[#e5e2e1] transition-colors hover:bg-[#393939]"
                     >
                       Details
                     </Link>
-                  </div>
+                  </div> */}
                 </div>
               </div>
             ))}
@@ -187,6 +262,27 @@ export default function FavoritesForm(props: Props) {
           Recent
         </Link>
       </nav> */}
+
+      {/* 詳細ダイアログ */}
+      {selected && (
+        <Dialog
+          selected={selected}
+          setSelectedId={setSelectedId}
+          authorized={true}
+          favoriteIds={idList}
+          handleRemoveFavorites={handleRemoveFavorites}
+        />
+      )}
+
+      {/* 削除確認ダイアログ */}
+      {selected && confirmTarget && (
+        <ConfirmDialog
+          target={confirmTarget}
+          setSelectedId={setSelectedId}
+          confirmRemoveFavorite={confirmRemoveFavorite}
+          setConfirmTarget={setConfirmTarget}
+        />
+      )}
     </div>
   );
 }

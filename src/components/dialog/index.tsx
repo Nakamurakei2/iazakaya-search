@@ -4,7 +4,6 @@ import { handleAddFavoritesButtonClick } from "@/services/restaurant-api";
 import { ShopsType } from "@/types/restaurant";
 import { Heart, HeartOff } from "lucide-react";
 import { Dispatch, SetStateAction } from "react";
-import { CiHeart } from "react-icons/ci";
 import { FaMoneyCheck, FaRegCalendarAlt } from "react-icons/fa";
 import { IoIosClose } from "react-icons/io";
 import { IoLocationOutline } from "react-icons/io5";
@@ -14,7 +13,7 @@ type Props = {
   selected: ShopsType;
   setSelectedId: Dispatch<SetStateAction<string>>;
   favoriteIds: string[];
-  setFavoriteIds: Dispatch<SetStateAction<string[]>>;
+  setFavoriteIds?: Dispatch<SetStateAction<string[]>>;
   authorized: boolean;
   handleRemoveFavorites: () => void;
 };
@@ -41,7 +40,8 @@ export const Dialog = (props: Props) => {
     const restaurantId = await handleAddFavoritesButtonClick({
       restaurantId: id,
     });
-    if (restaurantId) setFavoriteIds((prev) => [...prev, restaurantId]);
+    if (restaurantId && setFavoriteIds)
+      setFavoriteIds((prev) => [...prev, restaurantId]);
 
     setSelectedId(""); // 詳細ダイアログ閉じる
   };

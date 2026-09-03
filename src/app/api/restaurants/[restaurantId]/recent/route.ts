@@ -13,8 +13,6 @@ type ContextType = {
  */
 export async function POST(req: NextRequest, context: ContextType) {
   const { restaurantId } = await context.params;
-  console.log("restaurantId", restaurantId);
-  const body = await req.json();
 
   try {
     const cookieStore = await cookies();

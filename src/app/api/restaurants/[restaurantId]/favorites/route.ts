@@ -114,8 +114,9 @@ export async function DELETE(req: NextRequest, context: ContextType) {
 
       return NextResponse.json(
         {
-          message: "削除しました",
+          message: "お気に入りから削除しました",
           detail: `${deletedRestaurantId}を削除しました`,
+          restaurantId: deletedRestaurantId,
         },
         { status: 200 },
       );

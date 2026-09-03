@@ -26,8 +26,6 @@ export default async function RecentPage() {
       redirect("/");
     }
     decoded = jwt.verify(token, process.env.JWT_SECRET!) as jwt.JwtPayload;
-    console.log("decoced", decoded);
-
     // すでにserver sideなので直接DBを叩く
   } catch (e: unknown) {
     console.error(
@@ -83,11 +81,9 @@ export default async function RecentPage() {
     histories = restaurants.filter(
       (restaurant): restaurant is ShopsType => restaurant !== null,
     );
-
-    console.log("histories", histories);
   } catch (e: unknown) {
     console.error("e", e);
   }
 
-  return <RecentForm shops={histories} authorized={true} />;
+  return <RecentForm shops={histories} />;
 }

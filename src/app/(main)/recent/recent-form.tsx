@@ -2,7 +2,7 @@
 
 import { ConfirmDialog } from "@/components/confirmDailog";
 import { Dialog } from "@/components/dialog";
-import { ShopsType } from "@/types/restaurant";
+import { GENRE_STYLE, ShopsType } from "@/types/restaurant";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { MdArrowForward } from "react-icons/md";
@@ -10,11 +10,13 @@ import { toast } from "sonner";
 
 type Props = {
   shops: ShopsType[];
-  authorized: boolean;
 };
 
+/**
+ * 履歴フォームページ
+ */
 export default function RecentForm(props: Props) {
-  const { shops, authorized } = props;
+  const { shops } = props;
   const router = useRouter();
 
   const [selectedId, setSelectedId] = useState<string>(""); // 詳細ダイアログに渡すためのrestaurantId
@@ -101,7 +103,7 @@ export default function RecentForm(props: Props) {
               {shop.name}
             </h4>
           </div>
-
+          <h5>{shop.station_name}駅</h5>
           <button
             type="button"
             className="flex items-center gap-1 self-end text-sm font-bold leading-5 text-[#ffb77d] transition-colors hover:text-[#ff8c00]"
@@ -148,7 +150,7 @@ export default function RecentForm(props: Props) {
         <Dialog
           selected={selected}
           setSelectedId={setSelectedId}
-          authorized={authorized}
+          authorized={true}
           favoriteIds={favoriteIds}
           setFavoriteIds={setFavoriteIds}
           handleRemoveFavorites={handleRemoveFavorites}
