@@ -1,14 +1,14 @@
 "use client";
 
-import { RestaurantType } from "@/types/restaurant";
+import { ShopsType } from "@/types/restaurant";
 import { Dispatch, SetStateAction } from "react";
 import { MdHeartBroken } from "react-icons/md";
 
 type Props = {
   setSelectedId: Dispatch<SetStateAction<string>>;
-  confirmRemoveFavorite: (target: RestaurantType) => Promise<void>;
-  target: RestaurantType | null;
-  setConfirmTarget: Dispatch<SetStateAction<RestaurantType | null>>;
+  confirmRemoveFavorite: (target: ShopsType) => Promise<void>;
+  target: ShopsType | null;
+  setConfirmTarget: Dispatch<SetStateAction<ShopsType | null>>;
 };
 
 export const ConfirmDialog = ({

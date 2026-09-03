@@ -14,6 +14,7 @@ export default async function MainPage() {
   try {
     decoded = jwt.verify(token, process.env.JWT_SECRET!) as jwt.JwtPayload;
   } catch (e: unknown) {
+    console.error("e", e);
     return <IzakayaSearchApp authorized={false} />;
   }
 

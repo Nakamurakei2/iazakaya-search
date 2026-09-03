@@ -54,12 +54,13 @@ export const handleLocationSearch = async (props: Props) => {
       method: "GET",
       signal: AbortSignal.timeout(10000),
     });
-    const data = await res.json();
     if (!res.ok) {
+      const data = await res.json();
       console.error(data.message, data.detail);
       toast.error(data.message);
       return;
     }
+    const data = await res.json();
     const results_available = data.results_available;
     setTotalRestaurants(results_available); // 検索結果の全件数
     const shops: RestaurantType[] = data.shop;
@@ -131,13 +132,14 @@ export const handleSearch = async (props: SearchProps) => {
     });
     // stationNameに検索されたgeolocationを取得する
     const res = await fetch(`/api/restaurants/search?${params.toString()}`);
-    const data = await res.json();
 
     if (!res.ok) {
+      const data = await res.json();
       console.error(data.message, data.detail);
       toast.error(data.message);
       return;
     }
+    const data = await res.json();
     const results_available = data.results_available;
     setTotalRestaurants(results_available); // 検索結果の全件数
 
@@ -201,12 +203,13 @@ export const handlePaginateNext = async (props: PaginationProps) => {
       method: "GET",
       signal: AbortSignal.timeout(10000),
     });
-    const data = await res.json();
     if (!res.ok) {
+      const data = await res.json();
       console.error(data.message, data.detail);
       toast.error(data.message);
       return;
     }
+    const data = await res.json();
     const shops: RestaurantType[] = data.shop;
     const sorted = shops
       .map((shop) => ({
@@ -267,12 +270,13 @@ export const handlePaginatePrevious = async (props: PaginationProps) => {
       method: "GET",
       signal: AbortSignal.timeout(10000),
     });
-    const data = await res.json();
     if (!res.ok) {
+      const data = await res.json();
       console.error(data.message, data.detail);
       toast.error(data.message);
       return;
     }
+    const data = await res.json();
     const shops: RestaurantType[] = data.shop;
     const sorted = shops
       .map((shop) => ({
@@ -334,11 +338,10 @@ export const handlePaginateButtonClick = async (
       method: "GET",
       signal: AbortSignal.timeout(10000),
     });
-
-    const data = await res.json();
     if (!res.ok) {
+      const data = await res.json();
     }
-
+    const data = await res.json();
     const shops: RestaurantType[] = data.shop;
     const sorted = shops
       .map((shop) => ({
@@ -376,12 +379,13 @@ export const handleAddFavoritesButtonClick = async (
       body: JSON.stringify({ restaurantId }),
       signal: AbortSignal.timeout(10000),
     });
-
-    const data = await res.json();
     if (!res.ok) {
+      const data = await res.json();
+
       toast.error(data.message);
       return;
     }
+    const data = await res.json();
     toast.success(data.message);
 
     return data.restaurant_id;
@@ -412,11 +416,12 @@ export const handleDeleteFavoritesButton = async (
       signal: AbortSignal.timeout(10000),
     });
 
-    const data = await res.json();
     if (!res.ok) {
+      const data = await res.json();
       toast.error(data.message);
       return;
     }
+    const data = await res.json();
     toast.success(data.message);
 
     // return data.restaurant_id;

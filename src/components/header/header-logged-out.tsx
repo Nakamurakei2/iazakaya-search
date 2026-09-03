@@ -29,7 +29,7 @@ export function HeaderLoggedOut() {
         <div className="flex items-center gap-sm">
           <button className="text-primary hover:bg-surface-variant/50 transition-all duration-300 active:scale-95 p-2 rounded-full flex items-center justify-center">
             <span className="material-symbols-outlined" data-icon="location_on">
-              <CiLocationOn />
+              <CiLocationOn className="scale-14" />
             </span>
           </button>
           <h1 className="font-headline-md text-headline-md font-bold text-primary">
@@ -39,7 +39,7 @@ export function HeaderLoggedOut() {
         <div className="flex items-center">
           <button className="hover:bg-surface-variant/50 transition-all duration-300 active:scale-95 p-2 rounded-full flex items-center justify-center">
             <span className="material-symbols-outlined text-on-surface-variant">
-              <IoPersonCircleOutline />
+              <IoPersonCircleOutline className="scale-14" />
             </span>
           </button>
         </div>

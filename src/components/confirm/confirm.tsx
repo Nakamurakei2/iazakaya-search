@@ -61,11 +61,12 @@ export default function ContactConfirmPage(props: Props) {
         body: JSON.stringify(inputData),
         signal: AbortSignal.timeout(10000),
       });
-      const data = await res.json();
       if (!res.ok) {
+        const data = await res.json();
         toast.error(data.message);
         return;
       }
+      const data = await res.json();
       toast.success(data.message);
       router.push("/contact");
     } catch (e: unknown) {

@@ -8,6 +8,7 @@ const apiBaseUrl = `${process.env.HOT_PEPPER_BEAUTY_BASE_URL}?key=${process.env.
 
 const LIMIT = 20;
 
+// TODO：内部APIへのアクセスはいらない。DBに直接アクセスで事足りる。
 export default async function FavoritePage() {
   const cookieStore = await cookies();
   const token = cookieStore.get("auth_token")?.value;

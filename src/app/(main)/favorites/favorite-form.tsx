@@ -47,8 +47,6 @@ export default function FavoritesForm(props: Props) {
     // setConfirmTarget(selected);
   };
 
-  console.log("sortedFavorites", sortedFavorites);
-
   return (
     <div className="min-h-screen bg-[#131313] pb-32 text-[#e5e2e1]">
       {/* Main */}
