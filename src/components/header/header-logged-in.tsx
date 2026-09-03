@@ -35,7 +35,7 @@ export function HeaderLoggedIn() {
   };
 
   return (
-    <header className="mt-2 fixed top-0 left-0 w-full z-50 flex items-center justify-between px-container-margin py-xs bg-surface/80 dark:bg-surface/80 backdrop-blur-xl shadow-sm">
+    <header className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-container-margin py-xs bg-surface/80 dark:bg-surface/80 backdrop-blur-xl shadow-sm">
       <div className="flex items-center gap-sm">
         <Link
           href={"/"}

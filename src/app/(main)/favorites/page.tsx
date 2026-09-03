@@ -1,4 +1,4 @@
-import { FavoriteItem, RestaurantType } from "@/types/restaurant";
+import { FavoriteItem, ShopsType } from "@/types/restaurant";
 import FavoriteForm from "./favorite-form";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -31,7 +31,7 @@ export default async function FavoritePage() {
     redirect("/");
   }
 
-  let favorites: RestaurantType[] = [];
+  let favorites: ShopsType[] = [];
   let totalFavorites: string = "";
 
   try {
@@ -78,7 +78,7 @@ export default async function FavoritePage() {
       );
 
       favorites = restaurants.filter(
-        (restaurant): restaurant is RestaurantType => restaurant !== null,
+        (restaurant): restaurant is ShopsType => restaurant !== null,
       );
     }
   } catch (e: unknown) {

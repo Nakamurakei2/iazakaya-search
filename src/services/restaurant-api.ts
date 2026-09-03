@@ -66,7 +66,6 @@ export const handleLocationSearch = async (props: Props) => {
     const shops: RestaurantType[] = data.shop;
 
     // APIから取得した店舗データを現在地から近い順に並び替える
-    // もしかするとこの辺いらないかも→API側でsort機能があるので
     const sorted = shops
       .map((shop) => ({
         ...shop,

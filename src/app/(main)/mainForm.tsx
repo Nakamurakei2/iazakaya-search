@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, FormEvent } from "react";
+import { useState, useRef } from "react";
 import { Search } from "lucide-react";
 import { Pagination } from "@/components/pagination";
 import { handleLocationSearch, handleSearch } from "@/services/restaurant-api";
@@ -13,8 +13,8 @@ import {
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { FaLocationArrow, FaStar } from "react-icons/fa";
-import { MdOutlineAccountCircle, MdOutlineRestaurant } from "react-icons/md";
-import { IoBeer, IoLocationOutline } from "react-icons/io5";
+import { MdOutlineRestaurant } from "react-icons/md";
+import { IoBeer } from "react-icons/io5";
 import { IoMdTrain } from "react-icons/io";
 import { Dialog } from "@/components/dialog";
 import { ConfirmDialog } from "@/components/confirmDailog";
@@ -46,7 +46,7 @@ export default function IzakayaSearchApp(props: MainProps) {
   const [stationName, setStationName] = useState<string>("");
   const [shops, setShops] = useState<ShopsType[]>(); // 表示用レストランデータ(距離含む)
   const [page, setPage] = useState<number>(1); // ページネーション用の現在どのページを表す
-  const [selectedId, setSelectedId] = useState<string>("");
+  const [selectedId, setSelectedId] = useState<string>(""); // 詳細ダイアログ表示するためのレストランID
   const [isLocating, setIsLocating] = useState(false); // 読み込み中を表す
   const [locationNotice, setLocationNotice] = useState<string>(""); // 距離についての文言
   const dialogRef = useRef(null);
@@ -121,6 +121,8 @@ export default function IzakayaSearchApp(props: MainProps) {
       toast.success(data.message); // 店名込みで表示させた方が良い？
       setConfirmTarget(null); // モーダル閉じる
       setSelectedId(""); // 詳細モーダルを閉じる
+      const restaurantId = data.restaurantId;
+      setFavoriteIds((prevId) => prevId.filter((id) => id !== restaurantId)); // お気に入りのstateからも削除する
 
       router.refresh(); // サーバーへ最新データを取得するリクエストを送り更新する
     } catch (e: unknown) {
@@ -373,7 +375,7 @@ export default function IzakayaSearchApp(props: MainProps) {
                       <h4 className="font-headline-md text-[20px] leading-[28px] font-bold">
                         {shop.name}
                       </h4>
-                      <span className="text-surface-variant font-label-sm text-label-sm whitespace-nowrap mt-1">
+                      <span className="text-surface-variant font-label-sm whitespace-nowrap mt-1">
                         {locationNotice && (
                           <span>
                             {locationNotice}{" "}
