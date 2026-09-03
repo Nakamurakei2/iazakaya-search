@@ -32,16 +32,19 @@ export default function SignupPage() {
         signal: AbortSignal.timeout(10000),
         body: JSON.stringify(values),
       });
-      const data = await res.json();
       if (!res.ok) {
         // エラーメッセージ表示
         if (res.status === 409) {
+          const data = await res.json();
+
           toast.error(data.message);
         } else {
           // 他にもあれば
         }
         return;
       }
+      const data = await res.json();
+
       // 成功メッセージ表示
       toast.success(data.message);
       router.push("/");

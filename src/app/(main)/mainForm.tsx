@@ -8,7 +8,6 @@ import {
   FavoriteItem,
   GENRE_STYLE,
   Location,
-  RestaurantType,
   ShopsType,
 } from "@/types/restaurant";
 import { toast } from "sonner";
@@ -61,9 +60,7 @@ export default function IzakayaSearchApp(props: MainProps) {
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const confirmDialogRef = useRef<HTMLDivElement>(null);
-  const [confirmTarget, setConfirmTarget] = useState<RestaurantType | null>(
-    null,
-  ); // 削除確認ダイアログ
+  const [confirmTarget, setConfirmTarget] = useState<ShopsType | null>(null); // 削除確認ダイアログ
   const scrollRef = useRef<HTMLDivElement>(null);
   const selected = shops?.find((s) => s.id === selectedId) || null;
 
@@ -106,9 +103,7 @@ export default function IzakayaSearchApp(props: MainProps) {
   /**
    * 「削除する」ボタン押下時処理
    */
-  const confirmRemoveFavorite = async (
-    target: RestaurantType,
-  ): Promise<void> => {
+  const confirmRemoveFavorite = async (target: ShopsType): Promise<void> => {
     const { id } = target;
     try {
       const res = await fetch(`/api/restaurants/${id}/favorites`, {
@@ -117,11 +112,12 @@ export default function IzakayaSearchApp(props: MainProps) {
         cache: "no-store",
         signal: AbortSignal.timeout(10000),
       });
-      const data = await res.json();
       if (!res.ok) {
+        const data = await res.json();
         toast.error(data.message);
         return;
       }
+      const data = await res.json();
       toast.success(data.message); // 店名込みで表示させた方が良い？
       setConfirmTarget(null); // モーダル閉じる
       setSelectedId(""); // 詳細モーダルを閉じる
@@ -199,6 +195,37 @@ export default function IzakayaSearchApp(props: MainProps) {
 
     // 詳細検索窓を閉じる
     setIsAdvancedOpen(false);
+  };
+
+  /**
+   * 詳細モーダル展開
+   */
+  const handleDescriptionModal = async (shop: ShopsType) => {
+    setSelectedId(shop.id);
+
+    // ここで履歴テーブルに追加
+    const res = await fetch(`/api/restaurants/${shop.id}/recent`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      signal: AbortSignal.timeout(10000),
+      body: JSON.stringify(shop),
+    });
+
+    if (!res.ok) {
+      const data = await res.json();
+      console.error("data!!!", data);
+      return;
+    }
+
+    const data = await res.json();
+    console.log("data", data);
+
+    try {
+    } catch (e: unknown) {
+      console.error("e", e);
+    }
   };
 
   return (
@@ -328,7 +355,7 @@ export default function IzakayaSearchApp(props: MainProps) {
               <div
                 key={shop.id}
                 className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg mb-5"
-                onClick={() => setSelectedId(shop.id)}
+                onClick={() => handleDescriptionModal(shop)}
               >
                 <article className="bg-[#ffffff] text-[#121212] rounded-3xl overflow-hidden shadow-[0px_10px_30px_rgba(255,140,0,0.08)] flex flex-col group cursor-pointer hover:shadow-[0px_15px_40px_rgba(255,140,0,0.15)] transition-shadow duration-300">
                   <div className="relative h-48 w-full overflow-hidden">

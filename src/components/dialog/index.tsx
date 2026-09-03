@@ -33,8 +33,6 @@ export const Dialog = (props: Props) => {
     authorized,
     handleRemoveFavorites,
   } = props;
-  console.log("selected", selected);
-  console.log("favoriteIds", favoriteIds, selected.id);
 
   /**
    * お気に入り登録ボタン

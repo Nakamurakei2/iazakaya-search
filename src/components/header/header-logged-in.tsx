@@ -24,11 +24,11 @@ export function HeaderLoggedIn() {
       credentials: "include",
       signal: AbortSignal.timeout(10000),
     });
-    const data = await res.json();
     if (!res.ok) {
+      const data = await res.json();
       toast.error(data.message);
     }
-
+    const data = await res.json();
     toast.success(data.message);
     // ログイン画面へ遷移
     router.push("/login");
@@ -42,7 +42,7 @@ export function HeaderLoggedIn() {
           className="text-primary hover:bg-surface-variant/50 transition-all duration-300 active:scale-95 p-2 rounded-full flex items-center justify-center"
         >
           <span className="material-symbols-outlined" data-icon="location_on">
-            <CiLocationOn className="scale-13" />
+            <CiLocationOn className="scale-14" />
           </span>
         </Link>
         <h1 className="font-headline-md text-headline-md font-bold text-primary">
@@ -55,7 +55,7 @@ export function HeaderLoggedIn() {
           className="hover:bg-surface-variant/50 transition-all duration-300 active:scale-95 p-2 rounded-full flex items-center justify-center"
         >
           <span className="material-symbols-outlined text-on-surface-variant">
-            <IoPersonCircleOutline className="scale-13" />
+            <IoPersonCircleOutline className="scale-14" />
           </span>
         </Link>
       </div>

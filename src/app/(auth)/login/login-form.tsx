@@ -31,14 +31,14 @@ export default function LoginForm() {
         signal: AbortSignal.timeout(10000),
         body: JSON.stringify(value),
       });
-      const data = await res.json();
 
       if (!res.ok) {
+        const data = await res.json();
         toast.error(data.message);
         return;
       }
+      const data = await res.json();
       toast.success(data.message);
-      console.log("hoge");
       router.push("/");
     } catch (e: unknown) {
       if (e instanceof Error) {
