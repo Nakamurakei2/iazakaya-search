@@ -18,7 +18,7 @@ export const Pagination = (props: Props) => {
   } = props;
 
   return (
-    <nav className="pagination" aria-label="ページ送り">
+    <div className="pagination" aria-label="ページ送り">
       <button
         className="page-btn"
         onClick={handlePaginatePrevious}
@@ -76,6 +76,6 @@ export const Pagination = (props: Props) => {
       >
         <ChevronRight size={16} />
       </button>
-    </nav>
+    </div>
   );
 };

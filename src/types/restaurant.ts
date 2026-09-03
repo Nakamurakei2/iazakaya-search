@@ -126,6 +126,7 @@ export type PaginationButtonProps = {
   currentLocationData: Location | null;
   setShops: Dispatch<SetStateAction<ShopsType[] | undefined>>;
   setPage: Dispatch<SetStateAction<number>>;
+  scrollRef: RefObject<HTMLDivElement | null>;
 };
 
 /**

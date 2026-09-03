@@ -318,6 +318,7 @@ export const handlePaginateButtonClick = async (
     currentLocationData,
     setShops,
     setPage,
+    scrollRef,
   } = props;
 
   if (!currentLocationData) {
@@ -357,6 +358,10 @@ export const handlePaginateButtonClick = async (
     setShops(sorted);
     setPage(pageNumber);
     setStartPage(newStartPage);
+
+    scrollRef.current?.scrollIntoView({
+      behavior: "instant",
+    });
   } catch (e: unknown) {}
 };
 
