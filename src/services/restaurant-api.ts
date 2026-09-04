@@ -340,6 +340,7 @@ export const handlePaginateButtonClick = async (
     });
     if (!res.ok) {
       const data = await res.json();
+      console.error("data", data);
     }
     const data = await res.json();
     const shops: RestaurantType[] = data.shop;

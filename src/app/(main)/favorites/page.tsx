@@ -3,21 +3,25 @@ import FavoriteForm from "./favorite-form";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import jwt from "jsonwebtoken";
+import { pool } from "@/lib/pool";
 
 const apiBaseUrl = `${process.env.HOT_PEPPER_BEAUTY_BASE_URL}?key=${process.env.HOT_PEPPER_BEAUTY_API_KEY}`;
 
-const LIMIT = 20;
+const LIMIT = 10;
 
 // TODO：内部APIへのアクセスはいらない。DBに直接アクセスで事足りる。
 export default async function FavoritePage() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("auth_token")?.value;
-
-  if (!token) {
-    redirect("/");
-  }
+  let favorites: ShopsType[] = [];
+  let totalRestaurants: number = 0;
 
   try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get("auth_token")?.value;
+
+    if (!token) {
+      redirect("/");
+    }
+
     const decoded = jwt.verify(
       token,
       process.env.JWT_SECRET!,
@@ -26,64 +30,56 @@ export default async function FavoritePage() {
     if (!decoded.sub) {
       throw new Error("Token payload missing sub");
     }
-  } catch (e: unknown) {
-    console.error("認証エラー:", e);
-    redirect("/");
-  }
 
-  let favorites: ShopsType[] = [];
-  let totalFavorites: string = "";
+    const userId = decoded.sub;
 
-  try {
-    const allCookies = cookieStore.toString();
-
-    const params = new URLSearchParams({
-      limit: String(LIMIT),
-      offset: "0",
-    });
-
-    const res = await fetch(
-      `${process.env.APP_URL}/api/restaurants/favorites?${params.toString()}`,
-      {
-        method: "GET",
-        headers: {
-          Cookie: allCookies,
-        },
-        cache: "no-store",
-        signal: AbortSignal.timeout(10000),
-      },
+    // 直接DBから取得(offset, limitが必要)
+    const result = await pool.query(
+      `
+        SELECT restaurant_id, created_at
+        FROM favorites
+        WHERE user_id = $1
+        ORDER BY created_at DESC
+        LIMIT 10
+        OFFSET 0
+      `,
+      [userId],
     );
 
-    if (res.ok) {
-      const data = await res.json();
-      const favoriteRestaurants: FavoriteItem[] = data.favoriteRestaurants;
-      totalFavorites = data.totalFavorites;
+    const countResult = await pool.query(
+      `
+      SELECT count(*) AS TOTAL
+      FROM favorites
+      WHERE user_id = $1
+      `,
+      [userId],
+    );
 
-      const restaurants = await Promise.all(
-        favoriteRestaurants.map(async ({ restaurant_id, created_at }) => {
-          const res = await fetch(
-            `${apiBaseUrl}&id=${restaurant_id}&format=json`,
-          );
+    const favoriteRestaurants = result.rows;
+    const countRestaurants = countResult.rows[0].total;
+    totalRestaurants = countRestaurants;
 
-          if (!res.ok) {
-            return null;
-          }
+    const restaurants = await Promise.all(
+      favoriteRestaurants.map(async ({ restaurant_id, created_at }) => {
+        const res = await fetch(
+          `${apiBaseUrl}&id=${restaurant_id}&format=json`,
+        );
 
-          const data = await res.json();
-          return {
-            ...data.results.shop[0],
-            created_at,
-          };
-        }),
-      );
+        if (!res.ok) {
+          return null;
+        }
 
-      favorites = restaurants.filter(
-        (restaurant): restaurant is ShopsType => restaurant !== null,
-      );
-    }
+        const data = await res.json();
+        return {
+          ...data.results.shop[0],
+          created_at,
+        };
+      }),
+    );
+    favorites = restaurants;
   } catch (e: unknown) {
     console.error("お気に入り取得エラー:", e);
   }
 
-  return <FavoriteForm data={favorites} totalFavorites={totalFavorites} />;
+  return <FavoriteForm shops={favorites} restaurantsTotal={totalRestaurants} />;
 }

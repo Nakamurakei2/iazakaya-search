@@ -150,3 +150,10 @@ export interface FavoriteItem {
 export interface FavoriteFormProps {
   data: FavoriteItem[];
 }
+
+export type HistoryRowType = {
+  history_id: number;
+  restaurant_id: string;
+  memi: string;
+  created_at: Date;
+};
