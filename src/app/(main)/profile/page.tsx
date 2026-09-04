@@ -17,7 +17,7 @@ import {
 
 export default function ProfilePage() {
   return (
-    <div className="min-h-screen bg-[#131313] pb-24 text-[#e5e2e1] md:pb-0">
+    <div className="min-h-screen bg-[#131313] text-[#e5e2e1] md:pb-0">
       {/* Top App Bar */}
       <header className="fixed left-0 top-0 z-50 flex w-full items-center justify-between bg-[#131313]/80 px-5 py-2 shadow-sm backdrop-blur-xl">
         {/* Logo */}

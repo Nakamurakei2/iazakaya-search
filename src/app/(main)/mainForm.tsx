@@ -204,27 +204,21 @@ export default function IzakayaSearchApp(props: MainProps) {
    */
   const handleDescriptionModal = async (shop: ShopsType) => {
     setSelectedId(shop.id);
-
-    // ここで履歴テ
-    const res = await fetch(`/api/restaurants/${shop.id}/recent`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      signal: AbortSignal.timeout(10000),
-      body: JSON.stringify(shop),
-    });
-
-    if (!res.ok) {
-      const data = await res.json();
-      console.error("data!!!", data);
-      return;
-    }
-
-    const data = await res.json();
-    console.log("data", data);
-
     try {
+      const res = await fetch(`/api/restaurants/${shop.id}/recent`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        signal: AbortSignal.timeout(10000),
+        body: JSON.stringify(shop),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        console.error("data!!!", data);
+        return;
+      }
     } catch (e: unknown) {
       console.error("e", e);
     }

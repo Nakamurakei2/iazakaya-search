@@ -3,16 +3,9 @@ import { redirect } from "next/navigation";
 import jwt from "jsonwebtoken";
 import RecentForm from "./recent-form";
 import { pool } from "@/lib/pool";
-import { ShopsType } from "@/types/restaurant";
+import { HistoryRowType, ShopsType } from "@/types/restaurant";
 
 const apiBaseUrl = `${process.env.HOT_PEPPER_BEAUTY_BASE_URL}?key=${process.env.HOT_PEPPER_BEAUTY_API_KEY}`;
-
-type HistoryRowType = {
-  history_id: number;
-  restaurant_id: string;
-  memi: string;
-  created_at: Date;
-};
 
 export default async function RecentPage() {
   let decoded: jwt.JwtPayload;
@@ -41,23 +34,40 @@ export default async function RecentPage() {
     redirect("/");
   }
   let histories: ShopsType[] = [];
+  let totalRestaurants: number = 0;
   try {
     const result = await pool.query(
       `
-      SELECT
-        history_id,
-        restaurant_id,
-        memo,
-        created_at
-      FROM histories
-      WHERE user_id = $1
-      ORDER BY created_at DESC
-      LIMIT 20
+      SELECT *
+        FROM (
+          SELECT DISTINCT ON (restaurant_id)
+            restaurant_id,
+            memo,
+            star,
+            created_at
+          FROM histories
+          WHERE user_id = $1
+          ORDER BY restaurant_id, created_at DESC
+        ) AS unique_histories
+        ORDER BY created_at DESC
+        LIMIT 10
+        OFFSET 0
       `,
       [userId],
     );
 
+    const countResult = await pool.query(
+      `
+      SELECT count(DISTINCT restaurant_id) AS total
+      FROM histories
+      WHERE user_id = $1
+      `,
+      [userId],
+    );
     const historyRestaurants: HistoryRowType[] = result.rows;
+
+    const countRestaurants = countResult.rows[0].total;
+    totalRestaurants = countRestaurants;
 
     // 外部APIにてレストランデータを取得
     const restaurants = await Promise.all(
@@ -78,12 +88,10 @@ export default async function RecentPage() {
       }),
     );
 
-    histories = restaurants.filter(
-      (restaurant): restaurant is ShopsType => restaurant !== null,
-    );
+    histories = restaurants;
   } catch (e: unknown) {
     console.error("e", e);
   }
 
-  return <RecentForm shops={histories} />;
+  return <RecentForm shops={histories} restaurantsTotal={totalRestaurants} />;
 }

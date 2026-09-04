@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(
       {
         message: "データの取得に成功しました。",
-        restaurants: shops,
+        shop: shops,
       },
       {
         status: 200,
