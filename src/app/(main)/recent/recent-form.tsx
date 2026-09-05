@@ -223,8 +223,8 @@ export default function RecentForm(props: Props) {
 
   return (
     <>
-      <div className="min-h-screen bg-[#131313] text-[#e5e2e1] md:pb-0">
-        <div className="mt-6 px-5 pt-20 md:mx-auto md:max-w-[1200px]">
+      <div className="bg-[#131313] text-[#e5e2e1] md:pb-0">
+        <div className="px-5 pt-20 md:mx-auto md:max-w-[1200px]">
           <h2 className="mb-8 text-[28px] font-bold leading-9 text-[#e5e2e1] md:text-[32px] md:leading-10">
             Recent Views
           </h2>

@@ -13,15 +13,14 @@ const LIMIT = 10;
 export default async function FavoritePage() {
   let favorites: ShopsType[] = [];
   let totalRestaurants: number = 0;
+  const cookieStore = await cookies();
+  const token = cookieStore.get("auth_token")?.value;
+
+  if (!token) {
+    redirect("/");
+  }
 
   try {
-    const cookieStore = await cookies();
-    const token = cookieStore.get("auth_token")?.value;
-
-    if (!token) {
-      redirect("/");
-    }
-
     const decoded = jwt.verify(
       token,
       process.env.JWT_SECRET!,

@@ -634,7 +634,6 @@ main article p {
    ============================================================ */
 main article > div:last-child > div:last-child {
   margin-top: auto;
-  padding-top: var(--spacing-sm);
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
