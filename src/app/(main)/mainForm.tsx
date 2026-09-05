@@ -60,7 +60,6 @@ export default function IzakayaSearchApp(props: MainProps) {
   const [selectedId, setSelectedId] = useState<string>(""); // 詳細ダイアログ表示するためのレストランID
   const [isLocating, setIsLocating] = useState(false); // 読み込み中を表す
   const [locationNotice, setLocationNotice] = useState<string>(""); // 距離についての文言
-  const dialogRef = useRef(null);
   const [totalRestaurants, setTotalRestaurants] = useState<number>(0); // 該当したレストラン総数
   const [pageSize, setPageSize] = useState(10); // 取得件数
   const [startPage, setStartPage] = useState(1); // 検索の開始位置
@@ -69,7 +68,6 @@ export default function IzakayaSearchApp(props: MainProps) {
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]); // お気に入り登録
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
-  const confirmDialogRef = useRef<HTMLDivElement>(null);
   const [confirmTarget, setConfirmTarget] = useState<ShopsType | null>(null); // 削除確認ダイアログ
   const scrollRef = useRef<HTMLDivElement>(null);
   const selected = shops?.find((s) => s.id === selectedId) || null;
@@ -78,10 +76,6 @@ export default function IzakayaSearchApp(props: MainProps) {
     setSelectedGenres((prev) =>
       prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code],
     );
-  };
-
-  const removeGenre = (code: string) => {
-    setSelectedGenres((prev) => prev.filter((c) => c !== code));
   };
 
   const handleClearGenres = () => {

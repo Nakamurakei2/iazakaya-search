@@ -81,7 +81,7 @@ export default function LoginForm() {
 
           {/* Title */}
           <h1 className="mb-2 text-[28px] font-bold leading-9 text-[#e5e2e1] md:text-[40px] md:leading-12">
-            Amber Lantern
+            Izakaya Finder
           </h1>
 
           <p className="text-[16px] leading-6 text-[#ddc1ae]">
@@ -128,12 +128,12 @@ export default function LoginForm() {
                 Password
               </label>
 
-              <Link
+              {/* <Link
                 href="/forgot-password"
                 className="text-xs font-semibold text-[#ffb77d] transition-colors hover:text-[#ffdcc3]"
               >
                 Forgot Password?
-              </Link>
+              </Link> */}
             </div>
 
             <div className="relative">
@@ -173,20 +173,19 @@ export default function LoginForm() {
         <div className="my-8 flex items-center">
           <div className="flex-grow border-t border-[#353534]" />
 
-          <span className="mx-4 text-xs font-semibold text-[#ddc1ae]">
+          {/* <span className="mx-4 text-xs font-semibold text-[#ddc1ae]">
             or continue with
-          </span>
+          </span> */}
 
           <div className="flex-grow border-t border-[#353534]" />
         </div>
 
         {/* Social Login */}
-        <div className="mb-8 grid grid-cols-2 gap-4">
+        {/* <div className="mb-8 grid grid-cols-2 gap-4">
           <button
             type="button"
             className="flex items-center justify-center gap-2 rounded-lg border border-[#353534] bg-[#1c1b1b] px-4 py-4 text-sm font-bold text-[#e5e2e1] transition-colors hover:bg-[#201f1f]"
           >
-            {/* Google */}
             <span className="text-base font-bold">G</span>
             Google
           </button>
@@ -195,20 +194,30 @@ export default function LoginForm() {
             type="button"
             className="flex items-center justify-center gap-2 rounded-lg border border-[#353534] bg-[#1c1b1b] px-4 py-4 text-sm font-bold text-[#e5e2e1] transition-colors hover:bg-[#201f1f]"
           >
-            {/* Apple */}
             <span className="text-base"></span>
             Apple
           </button>
-        </div>
+        </div> */}
 
         {/* Sign Up */}
         <div className="text-center text-[16px] leading-6 text-[#ddc1ae]">
-          Don't have an account?
+          Don't have an account?{" "}
           <Link
             href="/signup"
             className="text-sm font-bold text-[#ffb77d] transition-colors hover:text-[#ffdcc3]"
           >
             Sign Up
+          </Link>
+        </div>
+        <br />
+        <div className="text-center text-[16px] leading-6 text-[#ddc1ae]">
+          You can use this app without an account.
+          <Link
+            href="/"
+            className="text-sm font-bold text-[#ffb77d] transition-colors hover:text-[#ffdcc3]"
+          >
+            {" "}
+            Access from here.
           </Link>
         </div>
       </div>

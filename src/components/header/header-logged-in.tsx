@@ -1,39 +1,10 @@
 "use client";
 
-import { Menu, X } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
 import { CiLocationOn } from "react-icons/ci";
 import { IoPersonCircleOutline } from "react-icons/io5";
-import { toast } from "sonner";
-
-const NAV_LINKS = [
-  { label: "お気に入り登録", href: "/favorites" },
-  { label: "問い合わせ", href: "/contact" },
-];
 
 export function HeaderLoggedIn() {
-  const router = useRouter();
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  // ログアウト処理
-  const handleLogout = async (): Promise<void> => {
-    const res = await fetch("/api/auth/logout", {
-      method: "DELETE",
-      credentials: "include",
-      signal: AbortSignal.timeout(10000),
-    });
-    if (!res.ok) {
-      const data = await res.json();
-      toast.error(data.message);
-    }
-    const data = await res.json();
-    toast.success(data.message);
-    // ログイン画面へ遷移
-    router.push("/login");
-  };
-
   return (
     <header className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-container-margin py-xs bg-surface/80 dark:bg-surface/80 backdrop-blur-xl shadow-sm">
       <div className="flex items-center gap-sm">

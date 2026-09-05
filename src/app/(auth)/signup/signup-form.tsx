@@ -5,9 +5,11 @@ import { ArrowRight, Eye, EyeOff, Lock, Mail, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
+import Link from "next/link";
+import { MdRestaurant } from "react-icons/md";
 
 type SignupFormValues = {
-  fullName: string;
+  username: string;
   email: string;
   password: string;
 };
@@ -24,7 +26,7 @@ export default function SignupPage() {
 
   const onSubmit = async (values: SignupFormValues) => {
     try {
-      const res = await fetch("api/auth/signup", {
+      const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -76,8 +78,8 @@ export default function SignupPage() {
       <div className="relative z-10 mx-auto flex w-full max-w-md flex-col justify-center">
         {/* Header */}
         <div className="mb-8 text-center">
-          <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-full bg-[#353534] shadow-[0_10px_30px_rgba(255,140,0,0.15)]">
-            <span className="text-[32px] text-[#ffb77d]">🔥</span>
+          <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-full bg-[#ff8c00] text-[#623200]">
+            <MdRestaurant className="text-4xl" />
           </div>
 
           <h1 className="mb-2 text-[28px] font-bold leading-9 text-[#e5e2e1] md:text-[40px] md:leading-[48px]">
@@ -85,7 +87,7 @@ export default function SignupPage() {
           </h1>
 
           <p className="text-[16px] leading-6 text-[#ddc1ae]">
-            Join Amber Lantern and discover the night.
+            Join Izakaya Finder and discover the night.
           </p>
         </div>
 
@@ -98,22 +100,22 @@ export default function SignupPage() {
                 htmlFor="fullName"
                 className="mb-2 block text-[14px] font-bold leading-5 text-[#e5e2e1]"
               >
-                Full Name
+                User Name
               </label>
 
               <div className="relative">
                 <UserRound className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#ddc1ae]" />
 
                 <input
-                  id="fullName"
+                  id="username"
                   type="text"
                   placeholder="Taro Yamada"
                   className="w-full rounded-lg border border-[#564334] bg-[#1c1b1b] py-3 pl-12 pr-4 text-[16px] leading-6 text-[#e5e2e1] outline-none transition-colors placeholder:text-[#ddc1ae]/50 focus:border-[#ffb77d] focus:ring-1 focus:ring-[#ffb77d]"
-                  {...register("fullName", {
+                  {...register("username", {
                     required: "お名前を入力してください",
                   })}
                 />
-                <p className="error-message">{errors.fullName?.message}</p>
+                <p className="error-message">{errors.username?.message}</p>
               </div>
             </div>
 
@@ -206,6 +208,17 @@ export default function SignupPage() {
           >
             Login here
           </a>
+        </div>
+        <br />
+        <div className="text-center text-[16px] leading-6 text-[#ddc1ae]">
+          You can use this app without an account.
+          <Link
+            href="/"
+            className="text-sm font-bold text-[#ffb77d] transition-colors hover:text-[#ffdcc3]"
+          >
+            {" "}
+            Access from here.
+          </Link>
         </div>
       </div>
     </div>

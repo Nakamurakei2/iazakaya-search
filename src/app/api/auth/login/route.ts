@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json(
-      { message: "ユーザーログインに成功しました。" },
+      { message: "ログインに成功しました。" },
       { status: 200 },
     );
   } catch (e: unknown) {

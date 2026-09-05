@@ -247,7 +247,7 @@ export default function FavoritesForm(props: Props) {
 
   return (
     <>
-      <div className="min-h-screen bg-[#131313] text-[#e5e2e1]" ref={scrollRef}>
+      <div className="bg-[#131313] text-[#e5e2e1]" ref={scrollRef}>
         {/* Main */}
         <div className="mx-auto max-w-[1200px] px-5 pt-24">
           {/* Page Title */}
@@ -343,7 +343,7 @@ export default function FavoritesForm(props: Props) {
             </div>
           ) : (
             /* Empty State */
-            <div className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="flex flex-col items-center justify-center text-center">
               <div className="mb-6 flex h-32 w-32 items-center justify-center rounded-full bg-[#353534] opacity-50">
                 <MdFavoriteBorder className="text-[64px] text-[#ddc1ae]" />
               </div>
@@ -368,13 +368,15 @@ export default function FavoritesForm(props: Props) {
           )}
         </div>
       </div>
-      <Pagination
-        page={page}
-        totalRestaurants={Math.ceil(restaurantsTotal / pageSize)}
-        handlePaginatePrevious={handlePaginatePrevious}
-        handlePaginateNext={handlePaginateNext}
-        handlePaginateButtonClick={handlePaginateButtonClick}
-      />
+      {Math.ceil(restaurantsTotal / pageSize) && (
+        <Pagination
+          page={page}
+          totalRestaurants={Math.ceil(restaurantsTotal / pageSize)}
+          handlePaginatePrevious={handlePaginatePrevious}
+          handlePaginateNext={handlePaginateNext}
+          handlePaginateButtonClick={handlePaginateButtonClick}
+        />
+      )}
 
       {/* 詳細ダイアログ */}
       {selected && (
