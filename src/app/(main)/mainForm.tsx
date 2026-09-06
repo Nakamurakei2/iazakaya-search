@@ -221,7 +221,7 @@ export default function IzakayaSearchApp(props: MainProps) {
       <main className="pt-24 px-container-margin max-w-[1200px] mx-auto grid grid-cols-4 md:grid-cols-12 gap-gutter">
         <section className="col-span-4 md:col-span-8 md:col-start-3 flex flex-col gap-sm mb-lg">
           <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-background text-center mb-xs">
-            今夜の居酒屋を探す
+            今夜のお店を探す
           </h2>
           <div className="relative w-full rounded-2xl bg-surface-bright shadow-[0px_10px_30px_rgba(255,140,0,0.08)] flex items-center overflow-hidden border border-surface-container-highest focus-within:border-primary transition-colors duration-300">
             <div className="pl-md flex items-center text-on-surface-variant">
