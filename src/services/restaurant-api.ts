@@ -18,7 +18,6 @@ export const handleLocationSearch = async (props: Props) => {
     pageSize,
     selectedGenres,
     setStartPage,
-    setIsLocating,
     setLocationNotice,
     setCurrentLocationData,
     setTotalRestaurants,
@@ -28,7 +27,6 @@ export const handleLocationSearch = async (props: Props) => {
   } = props;
   // ボタンが押された際は毎回一番最初の近い順から取得したい
 
-  setIsLocating(true);
   setLocationNotice("");
 
   const genreString = selectedGenres.join(",");
@@ -86,7 +84,6 @@ export const handleLocationSearch = async (props: Props) => {
       toast.error(e.message);
     }
   } finally {
-    setIsLocating(false);
   }
 };
 
@@ -99,7 +96,6 @@ export const handleSearch = async (props: SearchProps) => {
     startPage,
     selectedGenres,
     stationName,
-    setIsLocating,
     setTotalRestaurants,
     setShops,
     setPage,
@@ -167,7 +163,6 @@ export const handleSearch = async (props: SearchProps) => {
     setLocationNotice(`${trimmed}駅から`);
   } catch (e: unknown) {
   } finally {
-    setIsLocating(false);
   }
 };
 
