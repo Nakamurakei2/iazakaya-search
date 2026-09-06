@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { Search, Tags } from "lucide-react";
 import {
   handlePaginateButtonClick,
@@ -82,6 +82,7 @@ export default function IzakayaSearchApp(props: MainProps) {
   };
 
   const handleClearGenres = () => {
+    localStorage.removeItem("savedGenres");
     setSelectedGenres([]);
   };
 
@@ -115,7 +116,7 @@ export default function IzakayaSearchApp(props: MainProps) {
         return;
       }
       const data = await res.json();
-      toast.success(data.message); // 店名込みで表示させた方が良い？
+      toast.success(data.message);
       setConfirmTarget(null); // モーダル閉じる
       setSelectedId(""); // 詳細モーダルを閉じる
       const restaurantId = data.restaurantId;
