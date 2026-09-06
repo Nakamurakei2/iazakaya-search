@@ -368,7 +368,7 @@ export default function FavoritesForm(props: Props) {
           )}
         </div>
       </div>
-      {Math.ceil(restaurantsTotal / pageSize) && (
+      {Math.ceil(restaurantsTotal / pageSize) > 1 ? (
         <Pagination
           page={page}
           totalRestaurants={Math.ceil(restaurantsTotal / pageSize)}
@@ -376,6 +376,8 @@ export default function FavoritesForm(props: Props) {
           handlePaginateNext={handlePaginateNext}
           handlePaginateButtonClick={handlePaginateButtonClick}
         />
+      ) : (
+        <div className="h-15"></div>
       )}
 
       {/* 詳細ダイアログ */}

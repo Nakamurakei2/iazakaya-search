@@ -29,7 +29,6 @@ export default function RecentForm(props: Props) {
   const [totalRestaurants, setTotalRestaurants] =
     useState<number>(restaurantsTotal); // 該当したレストラン総数
   const [restaurants, setRestaurants] = useState<ShopsType[]>(shops);
-  const [offset, setOffset] = useState(0); // offset
 
   /**
    * 「お気に入り解除」ボタン押下時処理
@@ -251,7 +250,7 @@ export default function RecentForm(props: Props) {
         </div>
       </div>
 
-      {Math.ceil(totalRestaurants / pageSize) > 1 && (
+      {Math.ceil(totalRestaurants / pageSize) > 1 ? (
         <Pagination
           page={page}
           totalRestaurants={Math.ceil(totalRestaurants / pageSize)}
@@ -259,6 +258,8 @@ export default function RecentForm(props: Props) {
           handlePaginateNext={handlePaginateNext}
           handlePaginateButtonClick={handlePaginateButtonClick}
         />
+      ) : (
+        <div className="h-15"></div>
       )}
 
       {/* 詳細ダイアログ */}
