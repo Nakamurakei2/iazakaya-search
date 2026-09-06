@@ -43,9 +43,10 @@ const GENRE_OPTIONS = [
   { code: "G011", name: "カラオケ・パーティ" },
   { code: "G012", name: "バー・カクテル" },
   { code: "G013", name: "ラーメン" },
+  { code: "G014", name: "カフェ・スイーツ" },
+  { code: "G015", name: "その他グルメ" },
+  { code: "G017", name: "韓国料理" },
   { code: "G016", name: "お好み焼き・もんじゃ" },
-  { code: "G017", name: "カフェ・スイーツ" },
-  { code: "G014", name: "その他" },
 ] as const;
 
 const LIMIT = 10;
