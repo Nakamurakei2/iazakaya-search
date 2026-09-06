@@ -29,8 +29,6 @@ export default async function ProfilePage() {
       `,
       [userId],
     );
-
-    console.log("result", result);
     username = result.rows[0].name;
     useremail = result.rows[0].email;
   } catch (e: unknown) {
