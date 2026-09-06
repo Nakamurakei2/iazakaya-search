@@ -29,8 +29,6 @@ type MainProps = {
   authorized: boolean;
 };
 
-const pageSize_OPTIONS = [5, 10, 20, 30] as const;
-
 const GENRE_OPTIONS = [
   { code: "G001", name: "居酒屋" },
   { code: "G002", name: "ダイニングバー・バル" },
@@ -50,18 +48,18 @@ const GENRE_OPTIONS = [
   { code: "G014", name: "その他" },
 ] as const;
 
+const LIMIT = 10;
+
 export default function IzakayaSearchApp(props: MainProps) {
   const { authorized } = props;
   const router = useRouter();
 
-  const [stationName, setStationName] = useState<string>("");
+  const [stationName, setStationName] = useState<string>(""); // 入力した駅名
   const [shops, setShops] = useState<ShopsType[]>(); // 表示用レストランデータ(距離含む)
   const [page, setPage] = useState<number>(1); // ページネーション用の現在どのページを表す
   const [selectedId, setSelectedId] = useState<string>(""); // 詳細ダイアログ表示するためのレストランID
-  const [isLocating, setIsLocating] = useState(false); // 読み込み中を表す
   const [locationNotice, setLocationNotice] = useState<string>(""); // 距離についての文言
   const [totalRestaurants, setTotalRestaurants] = useState<number>(0); // 該当したレストラン総数
-  const [pageSize, setPageSize] = useState(10); // 取得件数
   const [startPage, setStartPage] = useState(1); // 検索の開始位置
   const [currentLocationData, setCurrentLocationData] =
     useState<Location | null>(null); // 現在地格納
@@ -143,10 +141,9 @@ export default function IzakayaSearchApp(props: MainProps) {
     setStartPage(1);
 
     handleLocationSearch({
-      pageSize,
+      pageSize: LIMIT,
       selectedGenres,
       setStartPage,
-      setIsLocating,
       setLocationNotice,
       setCurrentLocationData,
       setTotalRestaurants,
@@ -241,11 +238,10 @@ export default function IzakayaSearchApp(props: MainProps) {
               <button
                 onClick={() =>
                   handleSearch({
-                    pageSize,
+                    pageSize: LIMIT,
                     startPage,
                     selectedGenres,
                     stationName,
-                    setIsLocating,
                     setTotalRestaurants,
                     setShops,
                     setPage,
@@ -470,13 +466,13 @@ export default function IzakayaSearchApp(props: MainProps) {
       </main>
 
       {/* ページネーション */}
-      {Math.ceil(totalRestaurants / pageSize) > 1 && (
+      {Math.ceil(totalRestaurants / LIMIT) > 1 && (
         <Pagination
           page={page}
-          totalRestaurants={Math.ceil(totalRestaurants / pageSize)}
+          totalRestaurants={Math.ceil(totalRestaurants / LIMIT)}
           handlePaginatePrevious={() =>
             handlePaginatePrevious({
-              pageSize,
+              pageSize: LIMIT,
               startPage,
               currentLocationData,
               setShops,
@@ -487,7 +483,7 @@ export default function IzakayaSearchApp(props: MainProps) {
           }
           handlePaginateNext={() =>
             handlePaginateNext({
-              pageSize,
+              pageSize: LIMIT,
               startPage,
               currentLocationData,
               setShops,
@@ -500,7 +496,7 @@ export default function IzakayaSearchApp(props: MainProps) {
             handlePaginateButtonClick({
               pageNumber,
               setStartPage,
-              pageSize,
+              pageSize: LIMIT,
               currentLocationData,
               setShops,
               setPage,

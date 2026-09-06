@@ -78,7 +78,6 @@ export type Props = {
   pageSize: number;
   selectedGenres: string[];
   setStartPage: Dispatch<SetStateAction<number>>;
-  setIsLocating: Dispatch<SetStateAction<boolean>>;
   setLocationNotice: Dispatch<SetStateAction<string>>;
   setCurrentLocationData: Dispatch<SetStateAction<Location | null>>;
   setTotalRestaurants: Dispatch<SetStateAction<number>>;
@@ -95,7 +94,6 @@ export type SearchProps = {
   selectedGenres: string[];
   startPage: number;
   stationName: string;
-  setIsLocating: Dispatch<SetStateAction<boolean>>;
   setTotalRestaurants: Dispatch<SetStateAction<number>>;
   setShops: Dispatch<SetStateAction<ShopsType[] | undefined>>;
   setPage: Dispatch<SetStateAction<number>>;
