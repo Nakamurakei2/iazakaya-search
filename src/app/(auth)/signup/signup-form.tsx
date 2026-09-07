@@ -62,7 +62,7 @@ export default function SignupPage() {
 
       console.error("予期せぬエラー", e);
       toast.error(
-        "予期せぬエラーが発生しました。時間を押してから再度実行してください",
+        "予期せぬエラーが発生しました。時間をおいてから再度実行してください",
       );
     }
   };
