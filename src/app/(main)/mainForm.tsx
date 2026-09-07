@@ -25,6 +25,7 @@ import { ConfirmDialog } from "@/components/confirmDailog";
 import { Pagination } from "@/components/pagination";
 import { calculateDistance } from "@/utils/caluclate-distance";
 import { currentLocation } from "@/utils/location";
+import { useQuery } from "@tanstack/react-query";
 
 type MainProps = {
   authorized: boolean;
@@ -135,7 +136,7 @@ export default function IzakayaSearchApp(props: MainProps) {
 
       console.error("予期せぬエラー", e);
       toast.error(
-        "予期せぬエラーが発生しました。時間を押してから再度実行してください",
+        "予期せぬエラーが発生しました。時間をおいてから再度実行してください",
       );
     }
   };
@@ -231,13 +232,23 @@ export default function IzakayaSearchApp(props: MainProps) {
 
       console.error("予期せぬエラー", e);
       toast.error(
-        "予期せぬエラーが発生しました。時間を押してから再度実行してください",
+        "予期せぬエラーが発生しました。時間をおいてから再度実行してください",
       );
     }
 
     // 詳細検索窓を閉じる
     setIsAdvancedOpen(false);
   };
+
+  /**
+   * 「現在地から検索」ボタン押下時処理 tanstack queryに書き換える
+   */
+  const { data, isPending, isError } = useQuery({
+    queryKey: ["keytest"],
+    queryFn: async () => {},
+  });
+
+  const 
 
   /**
    * 検索欄からのレストラン情報検索

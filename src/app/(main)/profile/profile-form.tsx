@@ -52,12 +52,12 @@ export default function ProfileFormPage(props: Props) {
             <IoPersonCircleOutline className="h-full w-full" />
 
             {/* Edit */}
-            <button
+            {/* <button
               type="button"
               className="absolute bottom-0 right-0 z-20 rounded-full bg-[#ffb77d] p-2 text-[#4d2600] shadow-lg transition-colors hover:bg-[#ffdcc3]"
             >
               <MdEdit className="text-sm" />
-            </button>
+            </button> */}
           </div>
 
           <h2 className="mb-1 text-center text-[28px] font-bold leading-9 md:text-[32px] md:leading-10">
