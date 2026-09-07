@@ -58,7 +58,6 @@ export default function IzakayaSearchApp(props: MainProps) {
   const router = useRouter();
 
   const [stationName, setStationName] = useState<string>(""); // 入力した駅名
-  const [shops, setShops] = useState<ShopsType[]>(); // 表示用レストランデータ(距離含む)
   const [page, setPage] = useState<number>(1); // ページネーション用の現在どのページを表す
   const [selectedId, setSelectedId] = useState<string>(""); // 詳細ダイアログ表示するためのレストランID
   const [locationNotice, setLocationNotice] = useState<string>(""); // 距離についての文言
@@ -66,7 +65,6 @@ export default function IzakayaSearchApp(props: MainProps) {
   const [startPage, setStartPage] = useState(1); // 検索の開始位置
   const [currentLocationData, setCurrentLocationData] =
     useState<Location | null>(null); // 現在地格納
-  const [favoriteIds, setFavoriteIds] = useState<string[]>([]); // お気に入り登録
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const [selectedGenres, setSelectedGenres] = useState<string[]>(() => {
     const savedGenres = localStorage.getItem("savedGenres");
@@ -74,7 +72,6 @@ export default function IzakayaSearchApp(props: MainProps) {
   });
   const [confirmTarget, setConfirmTarget] = useState<ShopsType | null>(null); // 削除確認ダイアログ
   const scrollRef = useRef<HTMLDivElement>(null);
-  const selected = shops?.find((s) => s.id === selectedId) || null;
 
   const toggleGenre = (code: string) => {
     setSelectedGenres((prev) =>
@@ -121,7 +118,7 @@ export default function IzakayaSearchApp(props: MainProps) {
       setConfirmTarget(null); // モーダル閉じる
       setSelectedId(""); // 詳細モーダルを閉じる
       const restaurantId = data.restaurantId;
-      setFavoriteIds((prevId) => prevId.filter((id) => id !== restaurantId)); // お気に入りのstateからも削除する
+      // setFavoriteIds((prevId) => prevId.filter((id) => id !== restaurantId)); // お気に入りのstateからも削除する
 
       router.refresh(); // サーバーへ最新データを取得するリクエストを送り更新する
     } catch (e: unknown) {
@@ -142,21 +139,20 @@ export default function IzakayaSearchApp(props: MainProps) {
   };
 
   /**
-   * 「現在地から検索」ボタン押下時処理
+   * 「現在地から検索」ボタン押下時処理 tanstack queryに書き換える
+   * usequeryではtry catchは不要（すでに備わっているので）
    */
-  const handleLocationButtonClick = async () => {
-    setStartPage(1);
-    setLocationNotice("");
-    const genreString = selectedGenres.join(",");
-
-    try {
-      // 現在地を取得
+  const {
+    data: restaurants,
+    refetch: refetchLocation,
+    isPending: isRestaurantsDataPending,
+    isFetching: isRestaurantsDataFetching,
+    isError,
+  } = useQuery({
+    queryKey: ["keytest"],
+    queryFn: async () => {
+      const genreString = selectedGenres.join(",");
       const { latitude, longitude } = await currentLocation();
-      setCurrentLocationData({
-        latitude,
-        longitude,
-      });
-
       const params = new URLSearchParams({
         lat: String(latitude),
         lng: String(longitude),
@@ -164,8 +160,6 @@ export default function IzakayaSearchApp(props: MainProps) {
         start: String(1),
         genre: genreString,
       });
-
-      // 店舗データを取得
       const restaurantsResult = await fetch(
         `/api/restaurants/search?${params.toString()}`,
         {
@@ -174,16 +168,14 @@ export default function IzakayaSearchApp(props: MainProps) {
         },
       );
       if (!restaurantsResult.ok) {
-        const data = await restaurantsResult.json();
-        console.error(data.message, data.detail);
-        toast.error(data.message);
-        return;
+        const restaurantData = await restaurantsResult.json();
+        console.error(restaurantData.message, restaurantData.detail);
+        toast.error(restaurantData.message);
+        throw new Error(restaurantData.message);
       }
-      const data = await restaurantsResult.json();
-      const results_available = data.results_available;
-      setTotalRestaurants(results_available); // 検索結果の全件数
-      const shops: RestaurantType[] = data.shop;
-
+      const restaurantData = await restaurantsResult.json();
+      const resultsAvailable = restaurantData.results_available;
+      const shops: RestaurantType[] = restaurantData.shops;
       // APIから取得した店舗データを現在地から近い順に並び替える
       const sorted = shops
         .map((shop) => ({
@@ -196,67 +188,71 @@ export default function IzakayaSearchApp(props: MainProps) {
           ),
         }))
         .sort((a, b) => a.distanceKm - b.distanceKm);
+      console.log("sorted", sorted);
+      return {
+        sortedRestaurants: sorted,
+        resultsAvailable,
+      };
+    },
+    enabled: false,
+    staleTime: 5 * 60 * 1000, // stale every 5 minutes
+  });
 
-      // ソート済みの店舗データをstateに格納
-      setShops(sorted);
-      setStationName("");
-      setPage(1);
-      setStartPage(1);
-      setLocationNotice("現在地から");
-
-      const res = await fetch("/api/restaurants/favorites", {
-        method: "GET",
-        signal: AbortSignal.timeout(10000),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        console.error(data.message);
-        return;
-      }
-      const datas = await res.json();
-      const favoriteRestaurants: FavoriteItem[] = datas.favoriteRestaurants;
-      const restaurantIds = favoriteRestaurants.map((data) => {
-        return data.restaurant_id;
-      });
-
-      setFavoriteIds(restaurantIds);
-    } catch (e: unknown) {
-      if (e instanceof TypeError) {
-        console.error("ネットワークエラーが発生しました:", e.message);
-        // ユーザーへの通知: "インターネットに接続されていません。回線状況を確認してください。"
-        toast.error(
-          "インターネットに接続されていません。回線状況を確認してください。",
-        );
-        return;
-      }
-
-      console.error("予期せぬエラー", e);
-      toast.error(
-        "予期せぬエラーが発生しました。時間をおいてから再度実行してください",
-      );
-    }
-
-    // 詳細検索窓を閉じる
+  const handleLocationButtonClick = async () => {
+    setPage(1);
+    setStartPage(1);
+    setStationName("");
+    setLocationNotice("現在地から");
     setIsAdvancedOpen(false);
+
+    const result = await refetchLocation();
+    if (result.isError) {
+      toast.error("店舗情報の取得に失敗しました。");
+    }
+    setTotalRestaurants(result.data?.resultsAvailable);
   };
 
   /**
-   * 「現在地から検索」ボタン押下時処理 tanstack queryに書き換える
+   * お気に入り取得APIのusequery
    */
-  const { data, isPending, isError } = useQuery({
-    queryKey: ["keytest"],
-    queryFn: async () => {},
+  const {
+    data: favorites,
+    isPending: isFavoriteIdsPending,
+    isError: isFavoriteIdsError,
+  } = useQuery({
+    queryKey: [],
+    queryFn: async () => {
+      const favoritesResult = await fetch(`/api/restaurants/favorites`, {
+        method: "GET",
+        signal: AbortSignal.timeout(1000),
+      });
+      if (!favoritesResult.ok) {
+        const data = await favoritesResult.json();
+        console.error(data.message);
+        throw new Error(data.message);
+      }
+      const favoriteIdsData = await favoritesResult.json();
+      const favoriteIds: FavoriteItem[] = favoriteIdsData.favoriteRestaurants;
+      return {
+        favoriteIds,
+      };
+    },
   });
 
-  const 
+  const shops = restaurants?.sortedRestaurants ?? [];
+  const favoriteIds =
+    favorites?.favoriteIds.map((favorite) => favorite.restaurant_id) ?? [];
 
+  const displayShops = shops.map((shop) => ({
+    ...shop,
+    isFavorite: favoriteIds.includes(shop.id),
+  }));
   /**
    * 検索欄からのレストラン情報検索
    */
   const handleSearch = async () => {
     if (!stationName) {
       toast.error("駅名を入力してください。");
-      setShops([]);
     }
     let trimmed;
     const genreString = selectedGenres.join(",");
@@ -309,7 +305,6 @@ export default function IzakayaSearchApp(props: MainProps) {
         .sort((a, b) => a.distanceKm - b.distanceKm);
 
       // ソート済みの店舗データをstateに格納
-      setShops(sorted);
       setPage(1);
       setLocationNotice(`${trimmed}駅から`);
     } catch (e: unknown) {
@@ -342,6 +337,8 @@ export default function IzakayaSearchApp(props: MainProps) {
     }
   };
 
+  const selected = displayShops?.find((s) => s.id === selectedId) || null;
+
   return (
     <>
       <main className="pt-24 px-container-margin max-w-[1200px] mx-auto grid grid-cols-4 md:grid-cols-12 gap-gutter">
@@ -372,6 +369,7 @@ export default function IzakayaSearchApp(props: MainProps) {
           </div>
           <button
             className="w-full md:w-auto md:self-center border-2 border-primary text-primary px-lg py-3 rounded-full font-label-bold text-label-bold flex items-center justify-center gap-xs hover:bg-primary hover:text-white transition-colors duration-300 active:scale-95 mt-xs"
+            disabled={isRestaurantsDataFetching}
             onClick={handleLocationButtonClick}
           >
             <span className="material-symbols-outlined" data-icon="near_me">
@@ -475,33 +473,199 @@ export default function IzakayaSearchApp(props: MainProps) {
           </div>
         </section>
         <section className="col-span-4 md:col-span-12">
-          <div className="flex justify-between items-center mb-2">
-            <h3 className="font-headline-md text-headline-md text-on-background mb-md flex items-center gap-xs">
-              <span
-                className="material-symbols-outlined text-primary"
-                data-icon="star"
-                data-weight="fill"
-              >
-                <FaStar />
-              </span>
-              周辺のお店
-            </h3>
-            <p className="recent-search-icon-secondary">
-              {totalRestaurants !== 0 && `${totalRestaurants}件`}
-            </p>
-          </div>
-
           {/* 一覧 */}
-          {shops?.length === 0 && (
-            <div className="empty-state">
-              <p className="empty-title">該当するお店が見つかりませんでした</p>
+          {!isRestaurantsDataPending && displayShops?.length === 0 && (
+            <>
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="font-headline-md text-headline-md text-on-background mb-md flex items-center gap-xs">
+                  <span
+                    className="material-symbols-outlined text-primary"
+                    data-icon="star"
+                    data-weight="fill"
+                  >
+                    <FaStar />
+                  </span>
+                  周辺のお店
+                </h3>
+                <p className="recent-search-icon-secondary">
+                  {totalRestaurants !== 0 && `${totalRestaurants}件`}
+                </p>
+              </div>
+              <section className="w-full px-container-margin pt-md pb-lg flex flex-col items-center text-center">
+                {/* Lantern */}
+                <div className="relative w-36 h-36 flex items-center justify-center mb-sm">
+                  <div className="absolute inset-0 bg-primary/10 rounded-full blur-2xl animate-pulse" />
 
-              <p className="empty-body">
-                駅名や店名を変えて、もう一度お試しください。
-              </p>
-            </div>
+                  <svg
+                    className="relative w-28 h-28 text-surface-variant filter drop-shadow-[0_8px_16px_rgba(0,0,0,0.5)]"
+                    fill="none"
+                    viewBox="0 0 120 120"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    {/* Roof */}
+                    <path
+                      d="M35 34C35 34 45 28 60 28C75 28 85 34 85 34L88 38H32L35 34Z"
+                      fill="#353534"
+                    />
+
+                    <path d="M57 20V28H63V20H57Z" fill="#a48c7a" />
+
+                    <circle
+                      cx="60"
+                      cy="18"
+                      r="5"
+                      stroke="#a48c7a"
+                      strokeWidth="2.5"
+                    />
+
+                    {/* Top frame */}
+                    <rect
+                      fill="#564334"
+                      height="5"
+                      rx="2.5"
+                      width="48"
+                      x="36"
+                      y="38"
+                    />
+
+                    {/* Lantern body */}
+                    <ellipse cx="60" cy="66" fill="#201f1f" rx="28" ry="25" />
+
+                    <circle
+                      cx="60"
+                      cy="66"
+                      fill="#ffb77d"
+                      fillOpacity="0.18"
+                      r="16"
+                    />
+
+                    <circle
+                      cx="60"
+                      cy="66"
+                      fill="#ff8c00"
+                      fillOpacity="0.25"
+                      r="7"
+                    />
+
+                    {/* Rib lines */}
+                    <path
+                      d="M44 48C41 55 41 77 44 84"
+                      stroke="#353534"
+                      strokeDasharray="2 2"
+                      strokeWidth="1.5"
+                    />
+
+                    <path
+                      d="M76 48C79 55 79 77 76 84"
+                      stroke="#353534"
+                      strokeDasharray="2 2"
+                      strokeWidth="1.5"
+                    />
+
+                    <path
+                      d="M60 43V89"
+                      stroke="#353534"
+                      strokeDasharray="3 2"
+                      strokeWidth="1.5"
+                    />
+
+                    {/* Sleeping eyes */}
+                    <path
+                      d="M50 63C50 66 54 66 54 63"
+                      stroke="#a48c7a"
+                      strokeLinecap="round"
+                      strokeWidth="2"
+                    />
+
+                    <path
+                      d="M66 63C66 66 70 66 70 63"
+                      stroke="#a48c7a"
+                      strokeLinecap="round"
+                      strokeWidth="2"
+                    />
+
+                    {/* Cheeks */}
+                    <ellipse
+                      cx="48"
+                      cy="68"
+                      fill="#ffb4ab"
+                      fillOpacity="0.4"
+                      rx="2.5"
+                      ry="1.5"
+                    />
+
+                    <ellipse
+                      cx="72"
+                      cy="68"
+                      fill="#ffb4ab"
+                      fillOpacity="0.4"
+                      rx="2.5"
+                      ry="1.5"
+                    />
+
+                    {/* Bottom frame */}
+                    <rect
+                      fill="#564334"
+                      height="5"
+                      rx="2.5"
+                      width="44"
+                      x="38"
+                      y="89"
+                    />
+
+                    {/* Tassel */}
+                    <path d="M60 94V102" stroke="#a48c7a" strokeWidth="2" />
+
+                    <circle cx="60" cy="104" fill="#c68315" r="3" />
+
+                    {/* Floating sparks */}
+                    <circle
+                      cx="86"
+                      cy="40"
+                      fill="#ffb77d"
+                      opacity="0.6"
+                      r="1.5"
+                    />
+
+                    <circle
+                      cx="94"
+                      cy="30"
+                      fill="#ff8c00"
+                      opacity="0.4"
+                      r="2.5"
+                    />
+
+                    <circle
+                      cx="28"
+                      cy="45"
+                      fill="#ffddb6"
+                      opacity="0.5"
+                      r="1"
+                    />
+                  </svg>
+
+                  <div className="absolute -bottom-1 bg-surface-container-highest/90 px-2.5 py-0.5 rounded-full shadow-sm">
+                    <span className="font-label-sm text-label-sm text-primary tracking-widest font-bold">
+                      Zzz...
+                    </span>
+                  </div>
+                </div>
+
+                {/* Message */}
+                <h1 className="font-headline-md text-headline-md text-on-surface mb-xs tracking-tight">
+                  条件に一致するお店が
+                  <br />
+                  見つかりませんでした
+                </h1>
+
+                <p className="font-body-md text-body-md text-on-surface-variant max-w-sm leading-relaxed mb-md">
+                  指定されたエリア・条件の組み合わせでは該当店舗がありません。
+                  条件を少し緩めるか、別のキーワードでお試しください。
+                </p>
+              </section>
+            </>
           )}
-          {shops?.map((shop) => {
+          {displayShops?.map((shop) => {
             const code = shop.genre.code;
             const style = GENRE_STYLE[code as keyof typeof GENRE_STYLE] || {
               c: "#8C6A4E",
@@ -590,7 +754,6 @@ export default function IzakayaSearchApp(props: MainProps) {
               pageSize: LIMIT,
               startPage,
               currentLocationData,
-              setShops,
               setPage,
               setStartPage,
               scrollRef,
@@ -601,7 +764,6 @@ export default function IzakayaSearchApp(props: MainProps) {
               pageSize: LIMIT,
               startPage,
               currentLocationData,
-              setShops,
               setPage,
               setStartPage,
               scrollRef,
@@ -613,7 +775,6 @@ export default function IzakayaSearchApp(props: MainProps) {
               setStartPage,
               pageSize: LIMIT,
               currentLocationData,
-              setShops,
               setPage,
               scrollRef,
             })
@@ -630,7 +791,6 @@ export default function IzakayaSearchApp(props: MainProps) {
           setSelectedId={setSelectedId}
           authorized={authorized}
           favoriteIds={favoriteIds}
-          setFavoriteIds={setFavoriteIds}
           handleRemoveFavorites={handleRemoveFavorites}
         />
       )}
