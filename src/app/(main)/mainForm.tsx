@@ -3,15 +3,9 @@
 import { useState, useRef } from "react";
 import { Search, Tags } from "lucide-react";
 import {
-  handlePaginateButtonClick,
-  handlePaginateNext,
-  handlePaginatePrevious,
-} from "@/services/restaurant-api";
-import {
-  FavoriteItem,
   GENRE_STYLE,
   Location,
-  RestaurantType,
+  SearchMode,
   ShopsType,
 } from "@/types/restaurant";
 import { toast } from "sonner";
@@ -23,9 +17,13 @@ import { IoMdTrain } from "react-icons/io";
 import { Dialog } from "@/components/dialog";
 import { ConfirmDialog } from "@/components/confirmDailog";
 import { Pagination } from "@/components/pagination";
-import { calculateDistance } from "@/utils/caluclate-distance";
-import { currentLocation } from "@/utils/location";
 import { useQuery } from "@tanstack/react-query";
+import {
+  favoriteRestaurantsFetch,
+  restaurantFetch,
+  searchRestaurantFetch,
+} from "@/lib/api/api";
+import { currentLocation } from "@/utils/location";
 
 type MainProps = {
   authorized: boolean;
@@ -51,7 +49,7 @@ const GENRE_OPTIONS = [
   { code: "G016", name: "お好み焼き・もんじゃ" },
 ] as const;
 
-const LIMIT = 10;
+export const LIMIT = 10;
 
 export default function IzakayaSearchApp(props: MainProps) {
   const { authorized } = props;
@@ -67,9 +65,14 @@ export default function IzakayaSearchApp(props: MainProps) {
     useState<Location | null>(null); // 現在地格納
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const [selectedGenres, setSelectedGenres] = useState<string[]>(() => {
+    // server sideでのレンダリングでエラーになる可能性あり
+    if (typeof window === "undefined") {
+      return [];
+    }
     const savedGenres = localStorage.getItem("savedGenres");
     return savedGenres ? JSON.parse(savedGenres) : [];
   });
+  const [searchMode, setSearchMode] = useState<SearchMode>(); // 検索方法
   const [confirmTarget, setConfirmTarget] = useState<ShopsType | null>(null); // 削除確認ダイアログ
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -139,114 +142,68 @@ export default function IzakayaSearchApp(props: MainProps) {
   };
 
   /**
-   * 「現在地から検索」ボタン押下時処理 tanstack queryに書き換える
-   * usequeryではtry catchは不要（すでに備わっているので）
+   * 現在地から検索
    */
-  const {
-    data: restaurants,
-    refetch: refetchLocation,
-    isPending: isRestaurantsDataPending,
-    isFetching: isRestaurantsDataFetching,
-    isError,
-  } = useQuery({
-    queryKey: ["keytest"],
-    queryFn: async () => {
-      const genreString = selectedGenres.join(",");
-      const { latitude, longitude } = await currentLocation();
-      const params = new URLSearchParams({
-        lat: String(latitude),
-        lng: String(longitude),
-        count: String(LIMIT),
-        start: String(1),
-        genre: genreString,
-      });
-      const restaurantsResult = await fetch(
-        `/api/restaurants/search?${params.toString()}`,
-        {
-          method: "GET",
-          signal: AbortSignal.timeout(10000),
-        },
-      );
-      if (!restaurantsResult.ok) {
-        const restaurantData = await restaurantsResult.json();
-        console.error(restaurantData.message, restaurantData.detail);
-        toast.error(restaurantData.message);
-        throw new Error(restaurantData.message);
-      }
-      const restaurantData = await restaurantsResult.json();
-      const resultsAvailable = restaurantData.results_available;
-      const shops: RestaurantType[] = restaurantData.shops;
-      // APIから取得した店舗データを現在地から近い順に並び替える
-      const sorted = shops
-        .map((shop) => ({
-          ...shop,
-          distanceKm: calculateDistance(
-            latitude,
-            longitude,
-            shop.lat,
-            shop.lng,
-          ),
-        }))
-        .sort((a, b) => a.distanceKm - b.distanceKm);
-      console.log("sorted", sorted);
-      return {
-        sortedRestaurants: sorted,
-        resultsAvailable,
-      };
-    },
-    enabled: false,
-    staleTime: 5 * 60 * 1000, // stale every 5 minutes
-  });
-
   const handleLocationButtonClick = async () => {
+    setSearchMode("location");
     setPage(1);
     setStartPage(1);
     setStationName("");
     setLocationNotice("現在地から");
     setIsAdvancedOpen(false);
 
-    const result = await refetchLocation();
-    if (result.isError) {
+    const results = await refetchLocation();
+    console.log("現在地から検索", results);
+    if (results.isError) {
       toast.error("店舗情報の取得に失敗しました。");
+    } else {
+      setTotalRestaurants(results.data?.resultsAvailable);
+      setCurrentLocationData({
+        latitude: results.data!.latitude,
+        longitude: results.data!.longitude,
+      });
+      setStartPage(results.data!.results_start);
     }
-    setTotalRestaurants(result.data?.resultsAvailable);
   };
 
+  /**
+   * 「現在地から検索」ボタン押下時処理
+   * No need for try catch.(tanstack query covers it)
+   */
+  const {
+    data: restaurants,
+    refetch: refetchLocation,
+    isPending: isRestaurantsDataPending,
+    isFetching: isRestaurantsDataFetching,
+  } = useQuery({
+    queryKey: ["restaurants", "location", selectedGenres, page],
+    queryFn: async () => {
+      const { latitude, longitude } = currentLocationData
+        ? currentLocationData
+        : await currentLocation();
+
+      return restaurantFetch({
+        selectedGenres,
+        latitude,
+        longitude,
+        start: (page - 1) * LIMIT + 1,
+      });
+    },
+    staleTime: 5 * 60 * 1000, // for 5 minutes
+  });
   /**
    * お気に入り取得APIのusequery
    */
   const {
     data: favorites,
     isPending: isFavoriteIdsPending,
+    isFetching: isFavoriteIdsFetching,
     isError: isFavoriteIdsError,
   } = useQuery({
     queryKey: [],
-    queryFn: async () => {
-      const favoritesResult = await fetch(`/api/restaurants/favorites`, {
-        method: "GET",
-        signal: AbortSignal.timeout(1000),
-      });
-      if (!favoritesResult.ok) {
-        const data = await favoritesResult.json();
-        console.error(data.message);
-        throw new Error(data.message);
-      }
-      const favoriteIdsData = await favoritesResult.json();
-      const favoriteIds: FavoriteItem[] = favoriteIdsData.favoriteRestaurants;
-      return {
-        favoriteIds,
-      };
-    },
+    queryFn: async () => await favoriteRestaurantsFetch(),
   });
 
-  const shops = restaurants?.sortedRestaurants ?? [];
-  const favoriteIds =
-    favorites?.favoriteIds.map((favorite) => favorite.restaurant_id) ?? [];
-
-  const displayShops = shops.map((shop) => ({
-    ...shop,
-    isFavorite: favoriteIds.includes(shop.id),
-  }));
   /**
    * 検索欄からのレストラン情報検索
    */
@@ -254,63 +211,32 @@ export default function IzakayaSearchApp(props: MainProps) {
     if (!stationName) {
       toast.error("駅名を入力してください。");
     }
-    let trimmed;
-    const genreString = selectedGenres.join(",");
-
-    // 末尾に「駅」が入ってる場合は省く
-    const regex = /駅/g;
-    if (regex.test(stationName)) {
-      trimmed = stationName.replace(regex, "");
-    } else {
-      trimmed = stationName;
-    }
-
-    try {
-      const params = new URLSearchParams({
-        count: String(LIMIT),
-        start: String(startPage),
-        station: trimmed,
-        genre: genreString,
-      });
-      // stationNameに検索されたgeolocationを取得する
-      const res = await fetch(`/api/restaurants/search?${params.toString()}`);
-
-      if (!res.ok) {
-        const data = await res.json();
-        console.error(data.message, data.detail);
-        toast.error(data.message);
-        return;
-      }
-      const data = await res.json();
-      const results_available = data.results_available;
-      setTotalRestaurants(results_available); // 検索結果の全件数
-
-      setCurrentLocationData({
-        latitude: data.target_latitude,
-        longitude: data.target_longitude,
-      });
-
-      const shops: RestaurantType[] = data.shop;
-      // APIから取得した店舗データを現在地から近い順に並び替える
-      const sorted = shops
-        .map((shop) => ({
-          ...shop,
-          distanceKm: calculateDistance(
-            data.target_latitude,
-            data.target_longitude,
-            shop.lat,
-            shop.lng,
-          ),
-        }))
-        .sort((a, b) => a.distanceKm - b.distanceKm);
-
-      // ソート済みの店舗データをstateに格納
-      setPage(1);
-      setLocationNotice(`${trimmed}駅から`);
-    } catch (e: unknown) {
-    } finally {
-    }
+    setSearchMode("station");
+    const result = await searchRefetch();
+    setPage(1);
+    setLocationNotice(`${result.data?.station}駅から`);
+    setTotalRestaurants(result.data!.resultsAvailable);
   };
+
+  /**
+   * 検索欄からのレストラン情報検索 tanstack query
+   */
+  const {
+    data: searchData,
+    refetch: searchRefetch,
+    isFetching: isSearchDataFetching,
+    isError: isFetchingError,
+  } = useQuery({
+    queryKey: ["search", page, stationName],
+    queryFn: async () =>
+      await searchRestaurantFetch({
+        selectedGenres,
+        stationName,
+        startPage,
+      }),
+    staleTime: 5 * 60 * 1000, // stale every 5 minutes
+    enabled: false,
+  });
 
   /**
    * 詳細モーダル展開
@@ -337,6 +263,53 @@ export default function IzakayaSearchApp(props: MainProps) {
     }
   };
 
+  /**
+   * ページネーション「<」ボタン
+   */
+  const handlePaginatePrevious = async () => {
+    setPage((prev) => prev - 1); // re-runs tanstack query when state changes
+
+    window.scrollTo({
+      top: 0,
+      behavior: "instant",
+    });
+  };
+  /**
+   * ページネーション「>」ボタン
+   */
+  const handlePaginateNext = async () => {
+    setPage((prev) => prev + 1); // re-runs tanstack query when state changes
+
+    window.scrollTo({
+      top: 0,
+      behavior: "instant",
+    });
+  };
+
+  /**
+   * ページネーションボタン
+   */
+  const handlePaginateButtonClick = (n: number) => {
+    setPage(n);
+
+    window.scrollTo({
+      top: 0,
+      behavior: "instant",
+    });
+  };
+
+  const shops =
+    searchMode === "location"
+      ? (restaurants?.sortedRestaurants ?? [])
+      : (searchData?.sortedRestaurants ?? []);
+  const favoriteIds =
+    favorites?.favoriteIds.map((favorite) => favorite.restaurant_id) ?? [];
+
+  // UI表示用変数
+  const displayShops = shops.map((shop) => ({
+    ...shop,
+    isFavorite: favoriteIds.includes(shop.id),
+  }));
   const selected = displayShops?.find((s) => s.id === selectedId) || null;
 
   return (
@@ -749,35 +722,10 @@ export default function IzakayaSearchApp(props: MainProps) {
         <Pagination
           page={page}
           totalRestaurants={Math.ceil(totalRestaurants / LIMIT)}
-          handlePaginatePrevious={() =>
-            handlePaginatePrevious({
-              pageSize: LIMIT,
-              startPage,
-              currentLocationData,
-              setPage,
-              setStartPage,
-              scrollRef,
-            })
-          }
-          handlePaginateNext={() =>
-            handlePaginateNext({
-              pageSize: LIMIT,
-              startPage,
-              currentLocationData,
-              setPage,
-              setStartPage,
-              scrollRef,
-            })
-          }
+          handlePaginatePrevious={handlePaginatePrevious}
+          handlePaginateNext={handlePaginateNext}
           handlePaginateButtonClick={(pageNumber: number) =>
-            handlePaginateButtonClick({
-              pageNumber,
-              setStartPage,
-              pageSize: LIMIT,
-              currentLocationData,
-              setPage,
-              scrollRef,
-            })
+            handlePaginateButtonClick(pageNumber)
           }
         />
       ) : (
