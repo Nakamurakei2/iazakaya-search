@@ -153,7 +153,6 @@ export default function IzakayaSearchApp(props: MainProps) {
     setIsAdvancedOpen(false);
 
     const results = await refetchLocation();
-    console.log("現在地から検索", results);
     if (results.isError) {
       toast.error("店舗情報の取得に失敗しました。");
     } else {
@@ -176,7 +175,7 @@ export default function IzakayaSearchApp(props: MainProps) {
     isPending: isRestaurantsDataPending,
     isFetching: isRestaurantsDataFetching,
   } = useQuery({
-    queryKey: ["restaurants", "location", selectedGenres, page],
+    queryKey: ["location", selectedGenres, page],
     queryFn: async () => {
       const { latitude, longitude } = currentLocationData
         ? currentLocationData
@@ -191,6 +190,7 @@ export default function IzakayaSearchApp(props: MainProps) {
     },
     staleTime: 5 * 60 * 1000, // for 5 minutes
   });
+
   /**
    * お気に入り取得APIのusequery
    */
@@ -227,7 +227,7 @@ export default function IzakayaSearchApp(props: MainProps) {
     isFetching: isSearchDataFetching,
     isError: isFetchingError,
   } = useQuery({
-    queryKey: ["search", page, stationName],
+    queryKey: ["station", page, stationName],
     queryFn: async () =>
       await searchRestaurantFetch({
         selectedGenres,
@@ -274,6 +274,7 @@ export default function IzakayaSearchApp(props: MainProps) {
       behavior: "instant",
     });
   };
+
   /**
    * ページネーション「>」ボタン
    */
@@ -729,7 +730,7 @@ export default function IzakayaSearchApp(props: MainProps) {
           }
         />
       ) : (
-        <div className="h-15"></div>
+        <div className="h-20"></div>
       )}
 
       {/* 詳細ダイアログ */}
