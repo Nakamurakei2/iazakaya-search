@@ -1,3 +1,5 @@
+import { RestaurantType } from "@/types/restaurant";
+
 type Coordinates = {
   latitude: number;
   longitude: number;
@@ -53,3 +55,10 @@ export const currentLocation = (): Promise<Coordinates> => {
     }
   });
 };
+
+/**
+ * Google mapのURL作成
+ */
+export const googleMapUrl = (shop: RestaurantType) =>
+  `https://www.google.com/maps/dir/?api=1` +
+  `&destination=${shop.lat},${shop.lng}`;

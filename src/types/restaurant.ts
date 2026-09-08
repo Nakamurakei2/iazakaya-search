@@ -155,3 +155,14 @@ export type HistoryRowType = {
   memi: string;
   created_at: Date;
 };
+
+export type SearchResult = {
+  resultsAvailable: number;
+  sorted: ShopsType[];
+  station: string;
+};
+
+/**
+ * 検索モード
+ */
+export type SearchMode = "location" | "station";
