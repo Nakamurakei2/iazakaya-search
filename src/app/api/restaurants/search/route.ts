@@ -75,7 +75,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(
       {
         message: "レストランデータの取得に成功しました。",
-        shop: data.results.shop,
+        shops: data.results.shop,
         results_available: data.results.results_available, // 検索結果の全件数
         results_returned: data.results.results_returned, // 返却した検索結果の件数
         results_start: data.results.results_start, // 検索結果の開始位置

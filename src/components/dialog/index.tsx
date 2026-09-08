@@ -2,6 +2,7 @@
 
 import { handleAddFavoritesButtonClick } from "@/services/restaurant-api";
 import { ShopsType } from "@/types/restaurant";
+import { googleMapUrl } from "@/utils/location";
 import { Heart, HeartOff } from "lucide-react";
 import { Dispatch, SetStateAction } from "react";
 import { FaMoneyCheck, FaRegCalendarAlt } from "react-icons/fa";
@@ -159,7 +160,6 @@ export const Dialog = (props: Props) => {
                   </span>
                   Location
                 </h3>
-
                 <div className="iframe-container relative h-32 w-full overflow-hidden rounded-lg bg-[#353534]">
                   <iframe
                     src={`https://www.google.com/maps?q=${selected.lat},${selected.lng}&output=embed`}
@@ -172,10 +172,17 @@ export const Dialog = (props: Props) => {
 
                   <div className="absolute inset-0 bg-[#353534]/10 mix-blend-overlay" />
                 </div>
-
                 <p className="mt-2 text-[13px] leading-6 text-[#ddc1ae]">
                   {selected.access}
                 </p>
+                <a
+                  href={googleMapUrl(selected)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary underline mt-2"
+                >
+                  Google Mapsで経路を見る
+                </a>{" "}
               </div>
             </div>
           </div>
