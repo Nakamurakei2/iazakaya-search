@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import { Analytics } from "@vercel/analytics/next";
+import { Providers } from "./providers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -22,12 +23,14 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
-      <body className="bg-background text-on-background min-h-screen font-body-md overflow-x-hidden selection:bg-primary-container selection:text-on-primary-container">
-        <style>{FONT_IMPORT}</style>
-        {children}
-        <Analytics />
-        <Toaster position="top-right" richColors />
-      </body>
+      <Providers>
+        <body className="bg-background text-on-background min-h-screen font-body-md overflow-x-hidden selection:bg-primary-container selection:text-on-primary-container">
+          <style>{FONT_IMPORT}</style>
+          {children}
+          <Analytics />
+          <Toaster position="top-right" richColors />
+        </body>
+      </Providers>
     </html>
   );
 }
