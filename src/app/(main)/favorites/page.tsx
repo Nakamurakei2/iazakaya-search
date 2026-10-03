@@ -1,4 +1,4 @@
-import { FavoriteItem, ShopsType } from "@/types/restaurant";
+import { ShopsType } from "@/types/restaurant";
 import FavoriteForm from "./favorite-form";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -6,8 +6,6 @@ import jwt from "jsonwebtoken";
 import { pool } from "@/lib/pool";
 
 const apiBaseUrl = `${process.env.HOT_PEPPER_BEAUTY_BASE_URL}?key=${process.env.HOT_PEPPER_BEAUTY_API_KEY}`;
-
-const LIMIT = 10;
 
 // TODO：内部APIへのアクセスはいらない。DBに直接アクセスで事足りる。
 export default async function FavoritePage() {
