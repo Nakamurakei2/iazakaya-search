@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { FaRegHeart } from "react-icons/fa6";
 import { IoMdSearch } from "react-icons/io";
-import { MdHistory, MdOutlinePerson2 } from "react-icons/md";
+import { MdOutlinePerson2 } from "react-icons/md";
+import { RiRobot2Line } from "react-icons/ri";
 
 export const NavigationForm = () => {
   return (
@@ -16,6 +17,15 @@ export const NavigationForm = () => {
         <span className="font-label-sm text-label-sm mt-1">Search</span>
       </Link>
       <Link
+        href={"/concierge"}
+        className="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary active:scale-90 transition-transform"
+      >
+        <span className="material-symbols-outlined" data-icon="favorite">
+          <RiRobot2Line className="scale-14" />
+        </span>
+        <span className="font-label-sm text-label-sm mt-1">Concierge</span>
+      </Link>
+      <Link
         href={"/favorites"}
         className="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary active:scale-90 transition-transform"
       >
@@ -24,7 +34,7 @@ export const NavigationForm = () => {
         </span>
         <span className="font-label-sm text-label-sm mt-1">Favorites</span>
       </Link>
-      <Link
+      {/* <Link
         href={"/recent"}
         className="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary active:scale-90 transition-transform"
       >
@@ -32,7 +42,7 @@ export const NavigationForm = () => {
           <MdHistory className="scale-14" />
         </span>
         <span className="font-label-sm text-label-sm mt-1">Recent</span>
-      </Link>
+      </Link> */}
       <Link
         href={"/profile"}
         className="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary active:scale-90 transition-transform"

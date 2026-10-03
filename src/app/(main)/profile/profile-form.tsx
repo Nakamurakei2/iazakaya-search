@@ -3,13 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { IoPersonCircleOutline } from "react-icons/io5";
-import {
-  MdLogout,
-  MdEdit,
-  MdLogin,
-  MdPersonAdd,
-  MdSearch,
-} from "react-icons/md";
+import { MdLogout, MdLogin, MdPersonAdd, MdSearch } from "react-icons/md";
 import { toast } from "sonner";
 
 type Props = {
