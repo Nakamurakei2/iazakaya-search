@@ -105,6 +105,7 @@ export default function IzakayaSearchApp(props: MainProps) {
       setSearchMode(savedSearchMode as SearchMode);
     }
     setIsInitialized(true);
+    console.log("test");
   }, []);
   /**
    * sessionStorageへ各検索内容を保存する
