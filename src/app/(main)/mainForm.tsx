@@ -88,7 +88,7 @@ export default function IzakayaSearchApp(props: MainProps) {
     const savedGenres = localStorage.getItem("savedGenres");
     return savedGenres ? JSON.parse(savedGenres) : [];
   });
-  const [searchMode, setSearchMode] = useState<SearchMode>(() => {
+  const [searchMode, setSearchMode] = useState(() => {
     if (typeof window === "undefined") return undefined;
     return (sessionStorage.getItem("searchMode") as SearchMode) || undefined;
   }); // 検索方法
@@ -309,18 +309,16 @@ export default function IzakayaSearchApp(props: MainProps) {
     }
   };
 
-  useEffect(() => {
-    if (searchMode === "station" && searchData?.resultsAvailable != null) {
-      setTotalRestaurants(searchData.resultsAvailable);
-      if (searchData.station) {
-        setLocationNotice(`${searchData.station}駅から`);
-      }
+  if (searchMode === "station" && searchData?.resultsAvailable != null) {
+    setTotalRestaurants(searchData.resultsAvailable);
+    if (searchData.station) {
+      setLocationNotice(`${searchData.station}駅から`);
     }
+  }
 
-    if (searchMode === "location" && restaurants?.resultsAvailable != null) {
-      setTotalRestaurants(restaurants.resultsAvailable);
-    }
-  }, [searchMode, searchData, restaurants]);
+  if (searchMode === "location" && restaurants?.resultsAvailable != null) {
+    setTotalRestaurants(restaurants.resultsAvailable);
+  }
 
   /**
    * ページネーション「<」ボタン
