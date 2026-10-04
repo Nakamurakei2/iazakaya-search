@@ -56,49 +56,62 @@ export default function IzakayaSearchApp(props: MainProps) {
   const router = useRouter();
 
   // 検索状態はページ遷移後に戻ってきても復元できるようにする。
-  const [stationName, setStationName] = useState<string>(() => {
-    if (typeof window === "undefined") return "";
-    return sessionStorage.getItem("searchStationName") ?? "";
-  });
-  const [page, setPage] = useState<number>(() => {
-    if (typeof window === "undefined") return 1;
-    return Number(sessionStorage.getItem("searchPage") ?? "1");
-  });
+  const [stationName, setStationName] = useState<string>("");
+  const [page, setPage] = useState<number>(1);
   const [selectedId, setSelectedId] = useState<string>(""); // 詳細ダイアログ表示するためのレストランID
-  const [locationNotice, setLocationNotice] = useState<string>(() => {
-    if (typeof window === "undefined") return "";
-    return sessionStorage.getItem("searchLocationNotice") ?? "";
-  });
-  const [totalRestaurants, setTotalRestaurants] = useState<number>(() => {
-    if (typeof window === "undefined") return 0;
-    return Number(sessionStorage.getItem("searchTotalRestaurants") ?? "0");
-  });
+  const [locationNotice, setLocationNotice] = useState<string>("");
+  const [totalRestaurants, setTotalRestaurants] = useState<number>(0);
   const [currentLocationData, setCurrentLocationData] =
-    useState<Location | null>(() => {
-      if (typeof window === "undefined") return null;
-      const saved = sessionStorage.getItem("currentLocationData");
-      return saved ? JSON.parse(saved) : null;
-    }); // 現在地格納
+    useState<Location | null>(null); // 現在地格納
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
-  const [selectedGenres, setSelectedGenres] = useState<string[]>(() => {
-    // server sideでのレンダリングでエラーになる可能性あり
-    if (typeof window === "undefined") {
-      return [];
-    }
-    const savedGenres = localStorage.getItem("savedGenres");
-    return savedGenres ? JSON.parse(savedGenres) : [];
-  });
-  const [searchMode, setSearchMode] = useState(() => {
-    if (typeof window === "undefined") return undefined;
-    return (sessionStorage.getItem("searchMode") as SearchMode) || undefined;
-  }); // 検索方法
+  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
+  const [searchMode, setSearchMode] = useState<SearchMode | undefined>(
+    undefined,
+  ); // 検索方法
   const [confirmTarget, setConfirmTarget] = useState<ShopsType | null>(null); // 削除確認ダイアログ
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   /**
    *
    */
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setStationName(sessionStorage.getItem("searchStationName") ?? "");
+
+    setPage(Number(sessionStorage.getItem("searchPage") ?? "1"));
+
+    setLocationNotice(sessionStorage.getItem("searchLocationNotice") ?? "");
+
+    setTotalRestaurants(
+      Number(sessionStorage.getItem("searchTotalRestaurants") ?? "0"),
+    );
+
+    const savedLocation = sessionStorage.getItem("currentLocationData");
+
+    if (savedLocation) {
+      setCurrentLocationData(JSON.parse(savedLocation));
+    }
+
+    const savedGenres = localStorage.getItem("savedGenres");
+
+    if (savedGenres) {
+      setSelectedGenres(JSON.parse(savedGenres));
+    }
+
+    const savedSearchMode = sessionStorage.getItem("searchMode");
+
+    if (savedSearchMode) {
+      setSearchMode(savedSearchMode as SearchMode);
+    }
+    setIsInitialized(true);
+  }, []);
+  /**
+   * sessionStorageへ各検索内容を保存する
+   */
+  useEffect(() => {
+    if (!isInitialized) return;
+
     sessionStorage.setItem("searchStationName", stationName);
     sessionStorage.setItem("searchPage", String(page));
     sessionStorage.setItem("searchLocationNotice", locationNotice);
@@ -259,6 +272,8 @@ export default function IzakayaSearchApp(props: MainProps) {
       return;
     }
 
+    // 駅名を予測変換するためのAPIを実装
+
     setSearchMode("station");
     setPage(1);
     setLocationNotice(`${stationName}駅から`);
@@ -309,16 +324,16 @@ export default function IzakayaSearchApp(props: MainProps) {
     }
   };
 
-  if (searchMode === "station" && searchData?.resultsAvailable != null) {
-    setTotalRestaurants(searchData.resultsAvailable);
-    if (searchData.station) {
-      setLocationNotice(`${searchData.station}駅から`);
-    }
-  }
+  useEffect(() => {
+    if (searchMode === "station" && searchData?.resultsAvailable != null) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setTotalRestaurants(searchData.resultsAvailable);
 
-  if (searchMode === "location" && restaurants?.resultsAvailable != null) {
-    setTotalRestaurants(restaurants.resultsAvailable);
-  }
+      if (searchData.station) {
+        setLocationNotice(`${searchData.station}駅から`);
+      }
+    }
+  }, [searchMode, searchData]);
 
   /**
    * ページネーション「<」ボタン
