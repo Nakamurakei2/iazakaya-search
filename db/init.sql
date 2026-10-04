@@ -31,3 +31,10 @@ CREATE TABLE IF NOT EXISTS histories(
     REFERENCES users(id)
     ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS stations(
+  station_id INTEGER NOT NULL PRIMARY KEY, -- staton_id から station_id に修正
+  name VARCHAR(100) NOT NULL,
+  lat DOUBLE PRECISION NOT NULL,
+  lon DOUBLE PRECISION NOT NULL
+);

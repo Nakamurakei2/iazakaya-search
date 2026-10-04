@@ -1382,6 +1382,10 @@ nav button span:last-child {
   scroll-snap-type: x mandatory;
 }
 
+.btn-fetching {
+  background-color: #616060 !important;
+}
+
 .recent-search-list::-webkit-scrollbar {
   display: none;
 }
