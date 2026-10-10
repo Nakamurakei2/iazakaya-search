@@ -1,26 +1,73 @@
 "use client";
 
 import { ShopsType } from "@/types/restaurant";
-import { Dispatch, SetStateAction } from "react";
+import { QueryClient } from "@tanstack/react-query";
+import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
+import React, { Dispatch, SetStateAction } from "react";
 import { MdHeartBroken } from "react-icons/md";
+import { toast } from "sonner";
 
 type Props = {
   setSelectedId: Dispatch<SetStateAction<string>>;
-  confirmRemoveFavorite: (target: ShopsType) => Promise<void>;
   target: ShopsType | null;
   setConfirmTarget: Dispatch<SetStateAction<ShopsType | null>>;
+  router: AppRouterInstance;
+  queryClient: QueryClient;
 };
 
-export const ConfirmDialog = ({
-  confirmRemoveFavorite,
-  setConfirmTarget,
-  target,
-}: Props) => {
+export const ConfirmDialog = (props: Props) => {
+  const { setSelectedId, target, setConfirmTarget, router, queryClient } =
+    props;
+
   /**
    * 削除確認ダイアログを閉じる
    */
   const handleClose = () => {
     setConfirmTarget(null);
+  };
+
+  /**
+   * お気に入り削除ボタン押下時処理
+   */
+  const confirmRemoveFavorite = async (target: ShopsType): Promise<void> => {
+    const { id } = target;
+
+    try {
+      const res = await fetch(`/api/restaurants/${id}/favorites`, {
+        method: "DELETE",
+        credentials: "include",
+        cache: "no-store",
+        signal: AbortSignal.timeout(10000),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        toast.error(data.message);
+        return;
+      }
+      const data = await res.json();
+      toast.success(data.message);
+      setConfirmTarget(null); // モーダル閉じる
+      setSelectedId(""); // 詳細モーダルを閉じる
+
+      router.refresh(); // サーバーへ最新データを取得するリクエストを送り更新する
+      await queryClient.invalidateQueries({
+        queryKey: ["favorites"],
+      });
+    } catch (e: unknown) {
+      if (e instanceof TypeError) {
+        console.error("ネットワークエラーが発生しました:", e.message);
+        // ユーザーへの通知: "インターネットに接続されていません。回線状況を確認してください。"
+        toast.error(
+          "インターネットに接続されていません。回線状況を確認してください。",
+        );
+        return;
+      }
+
+      console.error("予期せぬエラー", e);
+      toast.error(
+        "予期せぬエラーが発生しました。時間をおいてから再度実行してください",
+      );
+    }
   };
 
   return (

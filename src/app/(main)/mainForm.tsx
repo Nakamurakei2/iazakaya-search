@@ -1,11 +1,9 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { Search } from "lucide-react";
 import { Location, SearchMode, ShopsType } from "@/types/restaurant";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { FaLocationArrow, FaSpinner } from "react-icons/fa";
 import { Dialog } from "@/components/dialog";
 import { ConfirmDialog } from "@/components/confirmDailog";
 import { Pagination } from "@/components/pagination";
@@ -19,6 +17,7 @@ import { currentLocation } from "@/utils/location";
 import { RecentSearch } from "@/components/recentSearch";
 import { GenreSearch } from "@/components/genre";
 import { RestaurantLists } from "@/components/restaurantLists";
+import { SearchForm } from "@/components/searchForm";
 
 type MainProps = {
   authorized: boolean;
@@ -113,57 +112,6 @@ export default function IzakayaSearchApp(props: MainProps) {
   ]);
 
   /**
-   * 「お気に入り解除」ボタン押下時処理
-   */
-  const handleRemoveFavorites = () => {
-    setConfirmTarget(selected);
-  };
-
-  /**
-   * お気に入り削除ボタン押下時処理
-   */
-  const confirmRemoveFavorite = async (target: ShopsType): Promise<void> => {
-    const { id } = target;
-
-    try {
-      const res = await fetch(`/api/restaurants/${id}/favorites`, {
-        method: "DELETE",
-        credentials: "include",
-        cache: "no-store",
-        signal: AbortSignal.timeout(10000),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        toast.error(data.message);
-        return;
-      }
-      const data = await res.json();
-      toast.success(data.message);
-      setConfirmTarget(null); // モーダル閉じる
-      setSelectedId(""); // 詳細モーダルを閉じる
-
-      router.refresh(); // サーバーへ最新データを取得するリクエストを送り更新する
-      await queryClient.invalidateQueries({
-        queryKey: ["favorites"],
-      });
-    } catch (e: unknown) {
-      if (e instanceof TypeError) {
-        console.error("ネットワークエラーが発生しました:", e.message);
-        // ユーザーへの通知: "インターネットに接続されていません。回線状況を確認してください。"
-        toast.error(
-          "インターネットに接続されていません。回線状況を確認してください。",
-        );
-        return;
-      }
-
-      console.error("予期せぬエラー", e);
-      toast.error(
-        "予期せぬエラーが発生しました。時間をおいてから再度実行してください",
-      );
-    }
-  };
-
-  /**
    * 現在地から検索
    */
   const handleLocationButtonClick = async () => {
@@ -216,12 +164,7 @@ export default function IzakayaSearchApp(props: MainProps) {
   /**
    * お気に入り取得APIのusequery
    */
-  const {
-    data: favorites,
-    isPending: isFavoriteIdsPending,
-    isFetching: isFavoriteIdsFetching,
-    isError: isFavoriteIdsError,
-  } = useQuery({
+  const { data: favorites } = useQuery({
     queryKey: ["favorites"],
     queryFn: async () => await favoriteRestaurantsFetch(),
   });
@@ -309,6 +252,7 @@ export default function IzakayaSearchApp(props: MainProps) {
     });
   };
 
+  // お気に入り登録したレストランのidを付与
   const shops =
     searchMode === "location"
       ? (restaurants?.sortedRestaurants ?? [])
@@ -326,46 +270,13 @@ export default function IzakayaSearchApp(props: MainProps) {
   return (
     <>
       <main className="pt-24 px-container-margin max-w-[1200px] mx-auto grid grid-cols-4 md:grid-cols-12 gap-gutter">
-        <section className="col-span-4 md:col-span-8 md:col-start-3 flex flex-col gap-sm mb-lg">
-          <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-background text-center mb-xs">
-            今夜のお店を探す
-          </h2>
-          <div className="relative w-full rounded-2xl bg-surface-bright shadow-[0px_10px_30px_rgba(255,140,0,0.08)] flex items-center overflow-hidden border border-surface-container-highest focus-within:border-primary transition-colors duration-300">
-            <div className="pl-md flex items-center text-on-surface-variant">
-              <span className="material-symbols-outlined" data-icon="search">
-                <Search />
-              </span>
-            </div>
-            <input
-              className="w-full bg-transparent border-none focus:ring-0 text-on-background font-body-lg text-body-lg px-sm py-4 placeholder-on-surface-variant/50"
-              placeholder="駅名で検索（例：渋谷）"
-              type="text"
-              onChange={(e) => setStationName(e.target.value)}
-            />
-            <div className="pr-sm">
-              <button
-                onClick={() => handleSearch()}
-                className="bg-primary-container text-on-primary-container px-sm py-2 rounded-xl font-label-bold text-label-bold hover:bg-primary-container/90 transition-colors active:scale-95"
-              >
-                検索
-              </button>
-            </div>
-          </div>
-          <button
-            className={`${isRestaurantsDataFetching ? "aa" : "w-full md:w-auto md:self-center border-2 border-primary text-primary px-lg py-3 rounded-full font-label-bold text-label-bold flex items-center justify-center gap-xs hover:bg-primary hover:text-white transition-colors duration-300 active:scale-95 mt-xs"}`}
-            onClick={handleLocationButtonClick}
-            disabled={isRestaurantsDataFetching}
-          >
-            <span className="material-symbols-outlined" data-icon="near_me">
-              {isRestaurantsDataFetching ? (
-                <FaSpinner className="animate-spin" />
-              ) : (
-                <FaLocationArrow />
-              )}
-            </span>
-            {isRestaurantsDataFetching ? "読み込み中..." : "現在地周辺から探す"}
-          </button>
-        </section>
+        <SearchForm
+          setStationName={setStationName}
+          isRestaurantsDataFetching={isRestaurantsDataFetching}
+          handleSearch={handleSearch}
+          handleLocationButtonClick={handleLocationButtonClick}
+        />
+
         <GenreSearch
           isAdvancedOpen={isAdvancedOpen}
           selectedGenres={selectedGenres}
@@ -405,8 +316,8 @@ export default function IzakayaSearchApp(props: MainProps) {
           setSelectedId={setSelectedId}
           authorized={authorized}
           favoriteIds={favoriteIds}
-          handleRemoveFavorites={handleRemoveFavorites}
           queryClient={queryClient}
+          setConfirmTarget={setConfirmTarget}
         />
       )}
 
@@ -415,8 +326,9 @@ export default function IzakayaSearchApp(props: MainProps) {
         <ConfirmDialog
           target={confirmTarget}
           setSelectedId={setSelectedId}
-          confirmRemoveFavorite={confirmRemoveFavorite}
           setConfirmTarget={setConfirmTarget}
+          queryClient={queryClient}
+          router={router}
         />
       )}
     </>

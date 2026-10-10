@@ -17,8 +17,8 @@ type Props = {
   favoriteIds: string[];
   setFavoriteIds?: Dispatch<SetStateAction<string[]>>;
   authorized: boolean;
-  handleRemoveFavorites: () => void;
   queryClient: QueryClient;
+  setConfirmTarget: React.Dispatch<SetStateAction<ShopsType | null>>;
 };
 
 /**
@@ -33,8 +33,8 @@ export const Dialog = (props: Props) => {
     favoriteIds,
     setFavoriteIds,
     authorized,
-    handleRemoveFavorites,
     queryClient,
+    setConfirmTarget,
   } = props;
 
   /**
@@ -53,7 +53,14 @@ export const Dialog = (props: Props) => {
   };
 
   /**
-   * 予約ボタン
+   * 「お気に入り解除」ボタン押下時処理
+   */
+  const handleRemoveFavorites = () => {
+    setConfirmTarget(selected);
+  };
+
+  /**
+   * 予約ボタン押下時処理
    */
   const handleReserveButton = (url: string) => {
     window.open(url, "_blank", "noopener,noreferrer");
