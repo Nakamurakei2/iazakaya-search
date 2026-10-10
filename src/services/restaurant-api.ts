@@ -28,6 +28,8 @@ export const handleAddFavoritesButtonClick = async (
     const data = await res.json();
     toast.success(data.message);
 
+    // ここで
+
     return data.restaurant_id;
   } catch (e: unknown) {
     console.error("e", e);

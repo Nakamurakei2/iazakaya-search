@@ -3,6 +3,7 @@
 import { handleAddFavoritesButtonClick } from "@/services/restaurant-api";
 import { ShopsType } from "@/types/restaurant";
 import { googleMapUrl } from "@/utils/location";
+import { QueryClient } from "@tanstack/react-query";
 import { Heart, HeartOff } from "lucide-react";
 import { Dispatch, SetStateAction } from "react";
 import { FaMoneyCheck, FaRegCalendarAlt } from "react-icons/fa";
@@ -17,6 +18,7 @@ type Props = {
   setFavoriteIds?: Dispatch<SetStateAction<string[]>>;
   authorized: boolean;
   handleRemoveFavorites: () => void;
+  queryClient: QueryClient;
 };
 
 /**
@@ -32,6 +34,7 @@ export const Dialog = (props: Props) => {
     setFavoriteIds,
     authorized,
     handleRemoveFavorites,
+    queryClient,
   } = props;
 
   /**
@@ -43,7 +46,9 @@ export const Dialog = (props: Props) => {
     });
     if (restaurantId && setFavoriteIds)
       setFavoriteIds((prev) => [...prev, restaurantId]);
-
+    await queryClient.invalidateQueries({
+      queryKey: ["favorites"],
+    });
     setSelectedId(""); // 詳細ダイアログ閉じる
   };
 

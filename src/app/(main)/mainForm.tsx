@@ -1,58 +1,34 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { Search, Tags } from "lucide-react";
-import {
-  GENRE_STYLE,
-  Location,
-  SearchMode,
-  ShopsType,
-} from "@/types/restaurant";
+import { Search } from "lucide-react";
+import { Location, SearchMode, ShopsType } from "@/types/restaurant";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { FaLocationArrow, FaSpinner, FaStar } from "react-icons/fa";
-import { MdOutlineRestaurant } from "react-icons/md";
-import { IoBeer } from "react-icons/io5";
-import { IoMdTrain } from "react-icons/io";
+import { FaLocationArrow, FaSpinner } from "react-icons/fa";
 import { Dialog } from "@/components/dialog";
 import { ConfirmDialog } from "@/components/confirmDailog";
 import { Pagination } from "@/components/pagination";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   favoriteRestaurantsFetch,
   restaurantFetch,
   searchRestaurantFetch,
 } from "@/lib/api/api";
 import { currentLocation } from "@/utils/location";
+import { RecentSearch } from "@/components/recentSearch";
+import { GenreSearch } from "@/components/genre";
+import { RestaurantLists } from "@/components/restaurantLists";
 
 type MainProps = {
   authorized: boolean;
 };
 
-const GENRE_OPTIONS = [
-  { code: "G001", name: "居酒屋" },
-  { code: "G002", name: "ダイニングバー・バル" },
-  { code: "G003", name: "創作料理" },
-  { code: "G004", name: "和食" },
-  { code: "G005", name: "洋食" },
-  { code: "G006", name: "イタリアン・フレンチ" },
-  { code: "G007", name: "中華" },
-  { code: "G008", name: "焼肉・ホルモン" },
-  { code: "G009", name: "アジア・エスニック料理" },
-  { code: "G010", name: "各国料理" },
-  { code: "G011", name: "カラオケ・パーティ" },
-  { code: "G012", name: "バー・カクテル" },
-  { code: "G013", name: "ラーメン" },
-  { code: "G014", name: "カフェ・スイーツ" },
-  { code: "G015", name: "その他グルメ" },
-  { code: "G017", name: "韓国料理" },
-  { code: "G016", name: "お好み焼き・もんじゃ" },
-] as const;
-
 export const LIMIT = 10;
 
 export default function IzakayaSearchApp(props: MainProps) {
   const { authorized } = props;
+  const queryClient = useQueryClient();
   const router = useRouter();
 
   // 検索状態はページ遷移後に戻ってきても復元できるようにする。
@@ -136,22 +112,6 @@ export default function IzakayaSearchApp(props: MainProps) {
     searchMode,
   ]);
 
-  const toggleGenre = (code: string) => {
-    setSelectedGenres((prev) =>
-      prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code],
-    );
-  };
-
-  const handleClearGenres = () => {
-    localStorage.removeItem("savedGenres");
-    setSelectedGenres([]);
-  };
-
-  const handleApplyAdvancedSearch = () => {
-    localStorage.setItem("savedGenres", JSON.stringify(selectedGenres));
-    setIsAdvancedOpen(false);
-  };
-
   /**
    * 「お気に入り解除」ボタン押下時処理
    */
@@ -160,10 +120,11 @@ export default function IzakayaSearchApp(props: MainProps) {
   };
 
   /**
-   * 「削除する」ボタン押下時処理
+   * お気に入り削除ボタン押下時処理
    */
   const confirmRemoveFavorite = async (target: ShopsType): Promise<void> => {
     const { id } = target;
+
     try {
       const res = await fetch(`/api/restaurants/${id}/favorites`, {
         method: "DELETE",
@@ -180,10 +141,11 @@ export default function IzakayaSearchApp(props: MainProps) {
       toast.success(data.message);
       setConfirmTarget(null); // モーダル閉じる
       setSelectedId(""); // 詳細モーダルを閉じる
-      const restaurantId = data.restaurantId;
-      // setFavoriteIds((prevId) => prevId.filter((id) => id !== restaurantId)); // お気に入りのstateからも削除する
 
       router.refresh(); // サーバーへ最新データを取得するリクエストを送り更新する
+      await queryClient.invalidateQueries({
+        queryKey: ["favorites"],
+      });
     } catch (e: unknown) {
       if (e instanceof TypeError) {
         console.error("ネットワークエラーが発生しました:", e.message);
@@ -260,7 +222,7 @@ export default function IzakayaSearchApp(props: MainProps) {
     isFetching: isFavoriteIdsFetching,
     isError: isFavoriteIdsError,
   } = useQuery({
-    queryKey: [],
+    queryKey: ["favorites"],
     queryFn: async () => await favoriteRestaurantsFetch(),
   });
 
@@ -299,31 +261,6 @@ export default function IzakayaSearchApp(props: MainProps) {
     gcTime: 30 * 60 * 1000,
     enabled: searchMode === "station" && !!stationName,
   });
-
-  /**
-   * 詳細モーダル展開
-   */
-  const handleDescriptionModal = async (shop: ShopsType) => {
-    setSelectedId(shop.id);
-    try {
-      const res = await fetch(`/api/restaurants/${shop.id}/recent`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        signal: AbortSignal.timeout(10000),
-        body: JSON.stringify(shop),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        console.error("data!!!", data);
-        return;
-      }
-    } catch (e: unknown) {
-      console.error("e", e);
-    }
-  };
 
   useEffect(() => {
     if (searchMode === "station" && searchData?.resultsAvailable != null) {
@@ -429,370 +366,21 @@ export default function IzakayaSearchApp(props: MainProps) {
             {isRestaurantsDataFetching ? "読み込み中..." : "現在地周辺から探す"}
           </button>
         </section>
-        <section className="genre-search">
-          {/* ヘッダー */}
-          <div className="genre-search-header">
-            <div className="genre-search-title">
-              <Tags size={20} />
-              <h4>ジャンルから探す</h4>
-            </div>
+        <GenreSearch
+          isAdvancedOpen={isAdvancedOpen}
+          selectedGenres={selectedGenres}
+          setSelectedGenres={setSelectedGenres}
+          setIsAdvancedOpen={setIsAdvancedOpen}
+        />
+        <RecentSearch scrollRef={scrollRef} />
 
-            <button
-              type="button"
-              className="genre-filter-button"
-              onClick={() => setIsAdvancedOpen((p) => !p)}
-            >
-              <Tags size={16} />
-              <span>詳細絞り込み</span>
-            </button>
-          </div>
-
-          {/* ジャンル一覧 */}
-
-          {isAdvancedOpen && (
-            <div className="advanced-panel">
-              <div className="genre-chip-row">
-                {GENRE_OPTIONS.map((g) => {
-                  const active = selectedGenres.includes(g.code);
-                  const color =
-                    GENRE_STYLE[g.code as keyof typeof GENRE_STYLE]?.c ??
-                    "#8C6A4E";
-                  return (
-                    <button
-                      type="button"
-                      key={g.code}
-                      className={`genre-chip-btn ${
-                        active ? "genre-chip-btn--active" : ""
-                      }`}
-                      style={
-                        active
-                          ? { background: color, borderColor: color }
-                          : { borderColor: color, color }
-                      }
-                      onClick={() => toggleGenre(g.code)}
-                      aria-pressed={active}
-                    >
-                      {g.name}
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="advanced-panel-actions">
-                <button
-                  type="button"
-                  className="advanced-clear-btn"
-                  onClick={handleClearGenres}
-                  disabled={selectedGenres.length === 0}
-                >
-                  クリア
-                </button>
-                <button
-                  type="button"
-                  className="advanced-apply-btn"
-                  onClick={handleApplyAdvancedSearch}
-                >
-                  この条件で登録
-                </button>
-              </div>
-            </div>
-          )}
-        </section>
-        <section className="recent-search-section" ref={scrollRef}>
-          <h3 className="recent-search-title">最近の検索</h3>
-
-          <div className="recent-search-list">
-            <button className="recent-search-item">
-              <IoMdTrain className="recent-search-icon recent-search-icon-primary" />
-              <span>新宿駅</span>
-            </button>
-
-            <button className="recent-search-item">
-              <IoMdTrain className="recent-search-icon recent-search-icon-primary" />
-              <span>渋谷駅</span>
-            </button>
-
-            <button className="recent-search-item">
-              <MdOutlineRestaurant className="recent-search-icon recent-search-icon-secondary" />
-              <span>焼き鳥</span>
-            </button>
-
-            <button className="recent-search-item">
-              <IoBeer className="recent-search-icon recent-search-icon-secondary" />
-              <span>クラフトビール</span>
-            </button>
-          </div>
-        </section>
-        <section className="col-span-4 md:col-span-12">
-          {/* 一覧 */}
-          {!isRestaurantsDataFetching && displayShops?.length === 0 && (
-            <>
-              <div className="flex justify-between items-center mb-2">
-                <h3 className="font-headline-md text-headline-md text-on-background mb-md flex items-center gap-xs">
-                  <span
-                    className="material-symbols-outlined text-primary"
-                    data-icon="star"
-                    data-weight="fill"
-                  >
-                    <FaStar />
-                  </span>
-                  周辺のお店
-                </h3>
-                <p className="recent-search-icon-secondary">
-                  {totalRestaurants !== 0 && `${totalRestaurants}件`}
-                </p>
-              </div>
-              <section className="w-full px-container-margin pt-md pb-lg flex flex-col items-center text-center">
-                {/* Lantern */}
-                <div className="relative w-36 h-36 flex items-center justify-center mb-sm">
-                  <div className="absolute inset-0 bg-primary/10 rounded-full blur-2xl animate-pulse" />
-
-                  <svg
-                    className="relative w-28 h-28 text-surface-variant filter drop-shadow-[0_8px_16px_rgba(0,0,0,0.5)]"
-                    fill="none"
-                    viewBox="0 0 120 120"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    {/* Roof */}
-                    <path
-                      d="M35 34C35 34 45 28 60 28C75 28 85 34 85 34L88 38H32L35 34Z"
-                      fill="#353534"
-                    />
-
-                    <path d="M57 20V28H63V20H57Z" fill="#a48c7a" />
-
-                    <circle
-                      cx="60"
-                      cy="18"
-                      r="5"
-                      stroke="#a48c7a"
-                      strokeWidth="2.5"
-                    />
-
-                    {/* Top frame */}
-                    <rect
-                      fill="#564334"
-                      height="5"
-                      rx="2.5"
-                      width="48"
-                      x="36"
-                      y="38"
-                    />
-
-                    {/* Lantern body */}
-                    <ellipse cx="60" cy="66" fill="#201f1f" rx="28" ry="25" />
-
-                    <circle
-                      cx="60"
-                      cy="66"
-                      fill="#ffb77d"
-                      fillOpacity="0.18"
-                      r="16"
-                    />
-
-                    <circle
-                      cx="60"
-                      cy="66"
-                      fill="#ff8c00"
-                      fillOpacity="0.25"
-                      r="7"
-                    />
-
-                    {/* Rib lines */}
-                    <path
-                      d="M44 48C41 55 41 77 44 84"
-                      stroke="#353534"
-                      strokeDasharray="2 2"
-                      strokeWidth="1.5"
-                    />
-
-                    <path
-                      d="M76 48C79 55 79 77 76 84"
-                      stroke="#353534"
-                      strokeDasharray="2 2"
-                      strokeWidth="1.5"
-                    />
-
-                    <path
-                      d="M60 43V89"
-                      stroke="#353534"
-                      strokeDasharray="3 2"
-                      strokeWidth="1.5"
-                    />
-
-                    {/* Sleeping eyes */}
-                    <path
-                      d="M50 63C50 66 54 66 54 63"
-                      stroke="#a48c7a"
-                      strokeLinecap="round"
-                      strokeWidth="2"
-                    />
-
-                    <path
-                      d="M66 63C66 66 70 66 70 63"
-                      stroke="#a48c7a"
-                      strokeLinecap="round"
-                      strokeWidth="2"
-                    />
-
-                    {/* Cheeks */}
-                    <ellipse
-                      cx="48"
-                      cy="68"
-                      fill="#ffb4ab"
-                      fillOpacity="0.4"
-                      rx="2.5"
-                      ry="1.5"
-                    />
-
-                    <ellipse
-                      cx="72"
-                      cy="68"
-                      fill="#ffb4ab"
-                      fillOpacity="0.4"
-                      rx="2.5"
-                      ry="1.5"
-                    />
-
-                    {/* Bottom frame */}
-                    <rect
-                      fill="#564334"
-                      height="5"
-                      rx="2.5"
-                      width="44"
-                      x="38"
-                      y="89"
-                    />
-
-                    {/* Tassel */}
-                    <path d="M60 94V102" stroke="#a48c7a" strokeWidth="2" />
-
-                    <circle cx="60" cy="104" fill="#c68315" r="3" />
-
-                    {/* Floating sparks */}
-                    <circle
-                      cx="86"
-                      cy="40"
-                      fill="#ffb77d"
-                      opacity="0.6"
-                      r="1.5"
-                    />
-
-                    <circle
-                      cx="94"
-                      cy="30"
-                      fill="#ff8c00"
-                      opacity="0.4"
-                      r="2.5"
-                    />
-
-                    <circle
-                      cx="28"
-                      cy="45"
-                      fill="#ffddb6"
-                      opacity="0.5"
-                      r="1"
-                    />
-                  </svg>
-
-                  <div className="absolute -bottom-1 bg-surface-container-highest/90 px-2.5 py-0.5 rounded-full shadow-sm">
-                    <span className="font-label-sm text-label-sm text-primary tracking-widest font-bold">
-                      Zzz...
-                    </span>
-                  </div>
-                </div>
-
-                {/* Message */}
-                <h1 className="font-headline-md text-headline-md text-on-surface mb-xs tracking-tight">
-                  条件に一致するお店が
-                  <br />
-                  見つかりませんでした
-                </h1>
-
-                <p className="font-body-md text-body-md text-on-surface-variant max-w-sm leading-relaxed mb-md">
-                  指定されたエリア・条件の組み合わせでは該当店舗がありません。
-                  条件を少し緩めるか、別のキーワードでお試しください。
-                </p>
-              </section>
-            </>
-          )}
-          {displayShops?.map((shop) => {
-            const code = shop.genre.code;
-            const style = GENRE_STYLE[code as keyof typeof GENRE_STYLE] || {
-              c: "#8C6A4E",
-            };
-
-            return (
-              <div
-                key={shop.id}
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg mb-5"
-                onClick={() => handleDescriptionModal(shop)}
-              >
-                <article className="bg-[#ffffff] text-[#121212] rounded-3xl overflow-hidden shadow-[0px_10px_30px_rgba(255,140,0,0.08)] flex flex-col group cursor-pointer hover:shadow-[0px_15px_40px_rgba(255,140,0,0.15)] transition-shadow duration-300">
-                  <div className="relative h-48 w-full overflow-hidden">
-                    <div
-                      className="bg-cover bg-center w-full h-full group-hover:scale-105 transition-transform duration-500"
-                      data-alt="A warm, inviting photo of a modern Japanese izakaya interior, featuring glowing paper lanterns, rich wooden counters, and a lively atmosphere. A plate of freshly grilled yakitori is in the foreground, illuminated by soft amber lighting against a dark, moody background. High quality, appetizing."
-                      style={{
-                        backgroundImage: `url(${shop.photo.pc.l})`,
-                      }}
-                    ></div>
-                    <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-black/80 to-transparent"></div>
-                  </div>
-                  <div className="p-sm flex flex-col gap-base flex-grow">
-                    <div className="flex justify-between items-start">
-                      <h4 className="font-headline-md text-[20px] leading-[28px] font-bold">
-                        {shop.name}
-                      </h4>
-                      <span className="text-surface-variant font-label-sm whitespace-nowrap mt-1">
-                        {locationNotice && (
-                          <span>
-                            {locationNotice}{" "}
-                            <b className="font-bold">
-                              {shop.distanceKm < 1
-                                ? `${Math.round(shop.distanceKm * 1000)}m`
-                                : `${shop.distanceKm.toFixed(2)}km`}
-                            </b>
-                          </span>
-                        )}
-                      </span>
-                    </div>
-                    <p className="text-surface-variant font-body-md text-body-md line-clamp-2">
-                      {shop.catch}
-                    </p>
-                    <div className="flex flex-wrap gap-2 mt-auto pt-sm">
-                      <span
-                        className="genre-tag"
-                        style={{
-                          backgroundColor:
-                            GENRE_STYLE[shop.genre.code]?.c ?? "#888888",
-                          borderColor:
-                            GENRE_STYLE[shop.genre.code]?.c ?? "#888888",
-                        }}
-                      >
-                        {shop.genre.name}
-                      </span>
-
-                      {shop.sub_genre ? (
-                        <span
-                          className="genre-tag"
-                          style={{
-                            backgroundColor:
-                              GENRE_STYLE[shop.sub_genre.code]?.c ?? "#888888",
-                            borderColor:
-                              GENRE_STYLE[shop.sub_genre.code]?.c ?? "#888888",
-                          }}
-                        >
-                          {shop.sub_genre.name}
-                        </span>
-                      ) : null}
-                    </div>
-                  </div>
-                </article>
-              </div>
-            );
-          })}
-        </section>
+        <RestaurantLists
+          isRestaurantsDataFetching={isRestaurantsDataFetching}
+          displayShops={displayShops}
+          totalRestaurants={totalRestaurants}
+          setSelectedId={setSelectedId}
+          locationNotice={locationNotice}
+        />
       </main>
 
       {/* ページネーション */}
@@ -818,6 +406,7 @@ export default function IzakayaSearchApp(props: MainProps) {
           authorized={authorized}
           favoriteIds={favoriteIds}
           handleRemoveFavorites={handleRemoveFavorites}
+          queryClient={queryClient}
         />
       )}
 
