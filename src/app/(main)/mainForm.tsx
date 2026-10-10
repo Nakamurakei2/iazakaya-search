@@ -112,7 +112,8 @@ export default function IzakayaSearchApp(props: MainProps) {
   ]);
 
   /**
-   * 現在地から検索
+   * 「現在地から検索」ボタン押下時処理
+   * geoLocationにて現在地から近くのレストランの情報を取得
    */
   const handleLocationButtonClick = async () => {
     setSearchMode("location");
@@ -136,7 +137,7 @@ export default function IzakayaSearchApp(props: MainProps) {
   };
 
   /**
-   * 「現在地から検索」ボタン押下時処理
+   * 「現在地から検索」ボタン押下時のuseQuery処理（fetch処理部分）
    * No need for try catch.(tanstack query covers it)
    */
   const {
@@ -159,14 +160,6 @@ export default function IzakayaSearchApp(props: MainProps) {
     },
     staleTime: 5 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
-  });
-
-  /**
-   * お気に入り取得APIのusequery
-   */
-  const { data: favorites } = useQuery({
-    queryKey: ["favorites"],
-    queryFn: async () => await favoriteRestaurantsFetch(),
   });
 
   /**
@@ -215,6 +208,14 @@ export default function IzakayaSearchApp(props: MainProps) {
       }
     }
   }, [searchMode, searchData]);
+
+  /**
+   * お気に入り取得APIのusequery
+   */
+  const { data: favorites } = useQuery({
+    queryKey: ["favorites"],
+    queryFn: async () => await favoriteRestaurantsFetch(),
+  });
 
   /**
    * ページネーション「<」ボタン
