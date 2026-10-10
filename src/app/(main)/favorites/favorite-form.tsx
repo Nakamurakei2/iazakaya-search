@@ -3,12 +3,7 @@
 import { ConfirmDialog } from "@/components/confirmDailog";
 import { Dialog } from "@/components/dialog";
 import { Pagination } from "@/components/pagination";
-import {
-  FavoriteItem,
-  GENRE_STYLE,
-  RestaurantType,
-  ShopsType,
-} from "@/types/restaurant";
+import { FavoriteItem, GENRE_STYLE, ShopsType } from "@/types/restaurant";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";

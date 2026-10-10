@@ -268,6 +268,56 @@ export default function IzakayaSearchApp(props: MainProps) {
   }));
   const selected = displayShops?.find((s) => s.id === selectedId) || null;
 
+  /**
+   * お気に入り削除ボタン押下時処理
+   */
+  const confirmRemoveFavorite = async (target: ShopsType): Promise<void> => {
+    const { id } = target;
+
+    try {
+      const res = await fetch(`/api/restaurants/${id}/favorites`, {
+        method: "DELETE",
+        credentials: "include",
+        cache: "no-store",
+        signal: AbortSignal.timeout(10000),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        toast.error(data.message);
+        return;
+      }
+      const data = await res.json();
+      toast.success(data.message);
+      setConfirmTarget(null); // モーダル閉じる
+      setSelectedId(""); // 詳細モーダルを閉じる
+
+      router.refresh(); // サーバーへ最新データを取得するリクエストを送り更新する
+      await queryClient.invalidateQueries({
+        queryKey: ["favorites"],
+      });
+    } catch (e: unknown) {
+      if (e instanceof TypeError) {
+        console.error("ネットワークエラーが発生しました:", e.message);
+        // ユーザーへの通知: "インターネットに接続されていません。回線状況を確認してください。"
+        toast.error(
+          "インターネットに接続されていません。回線状況を確認してください。",
+        );
+        return;
+      }
+
+      console.error("予期せぬエラー", e);
+      toast.error(
+        "予期せぬエラーが発生しました。時間をおいてから再度実行してください",
+      );
+    }
+  };
+  /**
+   * 「お気に入り解除」ボタン押下時処理
+   */
+  const handleRemoveFavorites = () => {
+    setConfirmTarget(selected);
+  };
+
   return (
     <>
       <main className="pt-24 px-container-margin max-w-[1200px] mx-auto grid grid-cols-4 md:grid-cols-12 gap-gutter">
@@ -318,7 +368,7 @@ export default function IzakayaSearchApp(props: MainProps) {
           authorized={authorized}
           favoriteIds={favoriteIds}
           queryClient={queryClient}
-          setConfirmTarget={setConfirmTarget}
+          handleRemoveFavorites={handleRemoveFavorites}
         />
       )}
 
@@ -328,8 +378,7 @@ export default function IzakayaSearchApp(props: MainProps) {
           target={confirmTarget}
           setSelectedId={setSelectedId}
           setConfirmTarget={setConfirmTarget}
-          queryClient={queryClient}
-          router={router}
+          confirmRemoveFavorite={confirmRemoveFavorite}
         />
       )}
     </>

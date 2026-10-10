@@ -17,8 +17,8 @@ type Props = {
   favoriteIds: string[];
   setFavoriteIds?: Dispatch<SetStateAction<string[]>>;
   authorized: boolean;
-  queryClient: QueryClient;
-  setConfirmTarget: React.Dispatch<SetStateAction<ShopsType | null>>;
+  queryClient?: QueryClient;
+  handleRemoveFavorites: () => void;
 };
 
 /**
@@ -34,7 +34,7 @@ export const Dialog = (props: Props) => {
     setFavoriteIds,
     authorized,
     queryClient,
-    setConfirmTarget,
+    handleRemoveFavorites,
   } = props;
 
   /**
@@ -46,17 +46,10 @@ export const Dialog = (props: Props) => {
     });
     if (restaurantId && setFavoriteIds)
       setFavoriteIds((prev) => [...prev, restaurantId]);
-    await queryClient.invalidateQueries({
+    await queryClient?.invalidateQueries({
       queryKey: ["favorites"],
     });
     setSelectedId(""); // 詳細ダイアログ閉じる
-  };
-
-  /**
-   * 「お気に入り解除」ボタン押下時処理
-   */
-  const handleRemoveFavorites = () => {
-    setConfirmTarget(selected);
   };
 
   /**
