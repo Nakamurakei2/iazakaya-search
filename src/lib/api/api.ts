@@ -17,7 +17,6 @@ export const restaurantFetch = async (props: LocationRestaurantFetch) => {
   const { selectedGenres, latitude, longitude, start } = props;
 
   const genreString = selectedGenres.join(",");
-  console.log("latitude", latitude, longitude, start);
   const params = new URLSearchParams({
     lat: String(latitude),
     lng: String(longitude),
@@ -39,7 +38,6 @@ export const restaurantFetch = async (props: LocationRestaurantFetch) => {
     throw new Error(restaurantData.message);
   }
   const restaurantData = await restaurantsResult.json();
-  console.log("restaurantData", restaurantData);
   const resultsAvailable = restaurantData.results_available;
   const shops: RestaurantType[] = restaurantData.shops;
   // APIから取得した店舗データを現在地から近い順に並び替える
@@ -86,55 +84,67 @@ type SearchProps = {
 
 /**
  * 検索欄からの検索
+ * stationsテーブルから駅名と緯度/軽度を取得する
  */
 export const searchRestaurantFetch = async (props: SearchProps) => {
   const { selectedGenres, stationName, startPage } = props;
   const genreString = selectedGenres.join(",");
-  let trimmed;
 
-  // 末尾に「駅」が入ってる場合は省く
-  const regex = /駅/g;
-  if (regex.test(stationName)) {
-    trimmed = stationName.replace(regex, "");
-  } else {
-    trimmed = stationName;
-  }
-
-  const params = new URLSearchParams({
-    count: String(LIMIT),
-    start: String(startPage),
-    station: trimmed,
-    genre: genreString,
+  // stationNameを使用してDBからlat/lonを取得する
+  const stationParam = new URLSearchParams({
+    station: stationName,
   });
-  // stationNameに検索されたgeolocationを取得する
-  const res = await fetch(`/api/restaurants/search?${params.toString()}`);
 
-  if (!res.ok) {
+  try {
+    const res = await fetch(`/api/station?${stationParam}`, {
+      method: "GET",
+      signal: AbortSignal.timeout(10000),
+    });
+
+    if (!res.ok) {
+      return;
+    }
+
     const data = await res.json();
-    console.error(data.message, data.detail);
-    toast.error(data.message);
-    return;
-  }
-  const data = await res.json();
-  const resultsAvailable: number = data.results_available;
+    const { lat, lon } = data.result;
 
-  const shops: RestaurantType[] = data.shops;
-  // APIから取得した店舗データを現在地から近い順に並び替える
-  const sorted = shops
-    .map((shop) => ({
-      ...shop,
-      distanceKm: calculateDistance(
-        data.target_latitude,
-        data.target_longitude,
-        shop.lat,
-        shop.lng,
-      ),
-    }))
-    .sort((a, b) => a.distanceKm - b.distanceKm);
-  console.log("shops", shops);
-  return {
-    sortedRestaurants: sorted,
-    resultsAvailable,
-    station: trimmed,
-  };
+    // hotpepperグルメAPI発火
+    const restaurantParams = new URLSearchParams({
+      count: String(LIMIT),
+      start: String(startPage),
+      lat,
+      lng: lon,
+      genre: genreString,
+    });
+
+    const restaurantRes = await fetch(
+      `/api/restaurants/search?${restaurantParams.toString()}`,
+    );
+
+    if (!restaurantRes.ok) {
+      const restaurantData = await restaurantRes.json();
+      console.error(restaurantData.message, restaurantData.detail);
+      toast.error(restaurantData.message);
+      return;
+    }
+    const restaurantData = await restaurantRes.json();
+    const resultsAvailable: number = restaurantData.results_available;
+
+    const shops: RestaurantType[] = restaurantData.shops;
+    // APIから取得した店舗データを現在地から近い順に並び替える
+    const sorted = shops
+      .map((shop) => ({
+        ...shop,
+        distanceKm: calculateDistance(lat, lon, shop.lat, shop.lng),
+      }))
+      .sort((a, b) => a.distanceKm - b.distanceKm);
+
+    return {
+      sortedRestaurants: sorted,
+      resultsAvailable,
+      station: stationName,
+    };
+  } catch (e: unknown) {
+    console.error("e", e);
+  }
 };

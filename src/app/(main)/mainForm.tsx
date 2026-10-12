@@ -46,10 +46,8 @@ export default function IzakayaSearchApp(props: MainProps) {
   const [confirmTarget, setConfirmTarget] = useState<ShopsType | null>(null); // 削除確認ダイアログ
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [predictiveSearch, setPredictiveSearch] = useState(false);
 
-  /**
-   *
-   */
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setStationName(sessionStorage.getItem("searchStationName") ?? "");
@@ -57,10 +55,6 @@ export default function IzakayaSearchApp(props: MainProps) {
     setPage(Number(sessionStorage.getItem("searchPage") ?? "1"));
 
     setLocationNotice(sessionStorage.getItem("searchLocationNotice") ?? "");
-
-    setTotalRestaurants(
-      Number(sessionStorage.getItem("searchTotalRestaurants") ?? "0"),
-    );
 
     const savedLocation = sessionStorage.getItem("currentLocationData");
 
@@ -80,7 +74,6 @@ export default function IzakayaSearchApp(props: MainProps) {
       setSearchMode(savedSearchMode as SearchMode);
     }
     setIsInitialized(true);
-    console.log("test");
   }, []);
   /**
    * sessionStorageへ各検索内容を保存する
@@ -91,7 +84,6 @@ export default function IzakayaSearchApp(props: MainProps) {
     sessionStorage.setItem("searchStationName", stationName);
     sessionStorage.setItem("searchPage", String(page));
     sessionStorage.setItem("searchLocationNotice", locationNotice);
-    sessionStorage.setItem("searchTotalRestaurants", String(totalRestaurants));
     if (searchMode) {
       sessionStorage.setItem("searchMode", searchMode);
     }
@@ -106,9 +98,9 @@ export default function IzakayaSearchApp(props: MainProps) {
     stationName,
     page,
     locationNotice,
-    totalRestaurants,
     currentLocationData,
     searchMode,
+    isInitialized,
   ]);
 
   /**
@@ -165,13 +157,15 @@ export default function IzakayaSearchApp(props: MainProps) {
   /**
    * 検索欄からのレストラン情報検索
    */
-  const handleSearch = () => {
+  const handleSearch = async () => {
     if (!stationName) {
       toast.error("駅名を入力してください。");
       return;
     }
-
+    // 予測検索窓を閉じる
+    setPredictiveSearch(false);
     // 駅名を予測変換するためのAPIを実装
+    await refetchFromStation();
 
     setSearchMode("station");
     setPage(1);
@@ -183,6 +177,7 @@ export default function IzakayaSearchApp(props: MainProps) {
    */
   const {
     data: searchData,
+    refetch: refetchFromStation,
     isFetching: isSearchDataFetching,
     isError: isFetchingError,
   } = useQuery({
@@ -195,7 +190,7 @@ export default function IzakayaSearchApp(props: MainProps) {
       }),
     staleTime: 5 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
-    enabled: searchMode === "station" && !!stationName,
+    enabled: false,
   });
 
   useEffect(() => {
@@ -322,10 +317,13 @@ export default function IzakayaSearchApp(props: MainProps) {
     <>
       <main className="pt-24 px-container-margin max-w-[1200px] mx-auto grid grid-cols-4 md:grid-cols-12 gap-gutter">
         <SearchForm
+          stationName={stationName}
           setStationName={setStationName}
           isRestaurantsDataFetching={isRestaurantsDataFetching}
           handleSearch={handleSearch}
           handleLocationButtonClick={handleLocationButtonClick}
+          predictiveSearch={predictiveSearch}
+          setPredictiveSearch={setPredictiveSearch}
         />
 
         <GenreSearch
@@ -346,7 +344,7 @@ export default function IzakayaSearchApp(props: MainProps) {
       </main>
 
       {/* ページネーション */}
-      {Math.ceil(totalRestaurants / LIMIT) > 1 ? (
+      {displayShops.length > 0 && Math.ceil(totalRestaurants / LIMIT) > 1 ? (
         <Pagination
           page={page}
           totalRestaurants={Math.ceil(totalRestaurants / LIMIT)}
