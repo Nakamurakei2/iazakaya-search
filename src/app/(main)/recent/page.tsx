@@ -55,7 +55,6 @@ export default async function RecentPage() {
       `,
       [userId],
     );
-    console.log("result", result, "userId", userId);
 
     const countResult = await pool.query(
       `
@@ -66,8 +65,6 @@ export default async function RecentPage() {
       [userId],
     );
     const historyRestaurants: HistoryRowType[] = result.rows;
-    console.log("historyRestaurants", historyRestaurants);
-
     const countRestaurants = countResult.rows[0].total;
     totalRestaurants = countRestaurants;
 
@@ -83,7 +80,6 @@ export default async function RecentPage() {
         }
 
         const data = await res.json();
-        console.log("data", data);
         return {
           ...data.results.shop[0],
           created_at,
@@ -92,7 +88,6 @@ export default async function RecentPage() {
     );
 
     histories = restaurants;
-    console.log("restaurants", restaurants);
   } catch (e: unknown) {
     console.error("e", e);
   }
