@@ -33,8 +33,10 @@ CREATE TABLE IF NOT EXISTS histories(
 );
 
 CREATE TABLE IF NOT EXISTS stations(
-  station_id INTEGER NOT NULL PRIMARY KEY, -- staton_id から station_id に修正
+  station_id INTEGER NOT NULL PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
+  hiragana VARCHAR(100) NOT NULL,
+  address VARCHAR(300) NOT NULL,
   lat DOUBLE PRECISION NOT NULL,
   lon DOUBLE PRECISION NOT NULL
 );

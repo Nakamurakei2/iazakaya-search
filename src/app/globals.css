@@ -108,6 +108,39 @@ body {
   color: var(--on-primary-container);
 }
 
+.overflow-visible {
+  overflow: visible !important;
+  background: #494545 !important;
+}
+
+.search-lists button {
+  color: #fff !important;
+  background: #494545 !important;
+}
+
+.border-bottom-white {
+  border-bottom: 1px solid #fff !important;
+  border-radius: 0px !important;
+}
+
+.right-0 {
+  right: 0;
+}
+
+.left-0 {
+  left: 0;
+}
+
+.predict-inputs {
+  top: 120%;
+  border: 1px solid #676767 !important;
+  border-radius: 8px;
+  padding-right: calc(var(--spacing) * 1.5) !important;
+  background-color: #494545;
+  max-height: 300px;
+  overflow: scroll;
+}
+
 button,
 input {
   font: inherit;
@@ -580,6 +613,13 @@ main article > div:first-child > div:nth-child(3) span:last-child {
   font-size: 14px;
   line-height: 20px;
   font-weight: 700;
+}
+
+.color-primary-background-grey {
+  color: var(--primary);
+  padding: 10px;
+  background: #595959;
+  border-radius: 999px;
 }
 
 /* ============================================================

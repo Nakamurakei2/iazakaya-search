@@ -25,14 +25,14 @@ async function main() {
     await client.query("TRUNCATE TABLE stations RESTART IDENTITY");
 
     for (const row of lines) {
-      const [id, name, lat, lon] = row.split(",");
+      const [id, name, hiragana, lat, lon, address] = row.split(",");
 
       await client.query(
         `
-          INSERT INTO stations (station_id, name, lat, lon)
-          VALUES ($1, $2, $3, $4)
+          INSERT INTO stations (station_id, name,hiragana, lat, lon, address)
+          VALUES ($1, $2, $3, $4, $5, $6)
         `,
-        [id, name, Number(lat), Number(lon)],
+        [id, name, hiragana, Number(lat), Number(lon), address],
       );
     }
 
