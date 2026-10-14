@@ -47,6 +47,7 @@ export default function IzakayaSearchApp(props: MainProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const [predictiveSearch, setPredictiveSearch] = useState(false);
+  const [isStationSearchEnabled, setIsStationSearchEnabled] = useState(false);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -133,9 +134,9 @@ export default function IzakayaSearchApp(props: MainProps) {
    * No need for try catch.(tanstack query covers it)
    */
   const {
-    data: restaurants,
+    data: locationData,
     refetch: refetchLocation,
-    isPending: isRestaurantsDataFetching,
+    isPending: isLocationDataPending,
   } = useQuery({
     queryKey: ["location", selectedGenres, page],
     queryFn: async () => {
@@ -169,6 +170,7 @@ export default function IzakayaSearchApp(props: MainProps) {
 
     setSearchMode("station");
     setPage(1);
+    setIsStationSearchEnabled(true);
     setLocationNotice(`${stationName}駅から`);
   };
 
@@ -178,7 +180,7 @@ export default function IzakayaSearchApp(props: MainProps) {
   const {
     data: searchData,
     refetch: refetchFromStation,
-    isFetching: isSearchDataFetching,
+    isPending: isSearchDataFetching,
     isError: isFetchingError,
   } = useQuery({
     queryKey: ["station", selectedGenres, stationName, page],
@@ -190,7 +192,7 @@ export default function IzakayaSearchApp(props: MainProps) {
       }),
     staleTime: 5 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
-    enabled: false,
+    enabled: isStationSearchEnabled && searchMode === "station",
   });
 
   useEffect(() => {
@@ -251,7 +253,7 @@ export default function IzakayaSearchApp(props: MainProps) {
   // お気に入り登録したレストランのidを付与
   const shops =
     searchMode === "location"
-      ? (restaurants?.sortedRestaurants ?? [])
+      ? (locationData?.sortedRestaurants ?? [])
       : (searchData?.sortedRestaurants ?? []);
   const favoriteIds =
     favorites?.favoriteIds.map((favorite) => favorite.restaurant_id) ?? [];
@@ -319,7 +321,7 @@ export default function IzakayaSearchApp(props: MainProps) {
         <SearchForm
           stationName={stationName}
           setStationName={setStationName}
-          isRestaurantsDataFetching={isRestaurantsDataFetching}
+          isLocationDataPending={isLocationDataPending}
           handleSearch={handleSearch}
           handleLocationButtonClick={handleLocationButtonClick}
           predictiveSearch={predictiveSearch}
@@ -335,7 +337,8 @@ export default function IzakayaSearchApp(props: MainProps) {
         <RecentSearch scrollRef={scrollRef} />
 
         <RestaurantLists
-          isRestaurantsDataFetching={isRestaurantsDataFetching}
+          isSearchDataFetching={isSearchDataFetching}
+          isLocationDataPending={isLocationDataPending}
           displayShops={displayShops}
           totalRestaurants={totalRestaurants}
           setSelectedId={setSelectedId}

@@ -14,7 +14,7 @@ type Station = {
 type Props = {
   stationName: string;
   setStationName: React.Dispatch<SetStateAction<string>>;
-  isRestaurantsDataFetching: boolean;
+  isLocationDataPending: boolean;
   handleSearch: () => void;
   handleLocationButtonClick: () => Promise<void>;
   predictiveSearch: boolean;
@@ -25,7 +25,7 @@ export const SearchForm = (props: Props) => {
   const {
     stationName,
     setStationName,
-    isRestaurantsDataFetching,
+    isLocationDataPending,
     handleSearch,
     handleLocationButtonClick,
     predictiveSearch,
@@ -109,7 +109,7 @@ export const SearchForm = (props: Props) => {
           <div className="pr-sm">
             <button
               type="button"
-              onClick={handleSearch}
+              onClick={() => handleSearch()}
               className="text-12px bg-primary-container text-on-primary-container px-sm py-2 rounded-xl font-label-bold text-label-bold hover:bg-primary-container/90 transition-colors active:scale-95"
             >
               検索
@@ -169,18 +169,18 @@ export const SearchForm = (props: Props) => {
         )}
       </div>
       <button
-        className={`${isRestaurantsDataFetching ? "aa" : "w-full md:w-auto md:self-center text-primary px-lg py-3 font-label-bold text-label-bold flex items-center justify-center gap-xs hover:bg-primary hover:text-white transition-colors duration-300 active:scale-95 mt-xs"}`}
+        className={`${isLocationDataPending ? "aa" : "w-full md:w-auto md:self-center text-primary px-lg py-3 font-label-bold text-label-bold flex items-center justify-center gap-xs hover:bg-primary hover:text-white transition-colors duration-300 active:scale-95 mt-xs"}`}
         onClick={handleLocationButtonClick}
-        disabled={isRestaurantsDataFetching}
+        disabled={isLocationDataPending}
       >
         <span className="material-symbols-outlined" data-icon="near_me">
-          {isRestaurantsDataFetching ? (
+          {isLocationDataPending ? (
             <FaSpinner className="animate-spin" />
           ) : (
             <FaLocationArrow />
           )}
         </span>
-        {isRestaurantsDataFetching ? "読み込み中..." : "現在地周辺から探す"}
+        {isLocationDataPending ? "読み込み中..." : "現在地周辺から探す"}
       </button>
     </section>
   );

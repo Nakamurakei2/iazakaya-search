@@ -4,7 +4,8 @@ import { FaStar } from "react-icons/fa";
 import { SetStateAction } from "react";
 
 type Props = {
-  isRestaurantsDataFetching: boolean;
+  isSearchDataFetching: boolean;
+  isLocationDataPending: boolean;
   displayShops: ShopsType[];
   totalRestaurants: number;
   setSelectedId: React.Dispatch<SetStateAction<string>>;
@@ -13,7 +14,8 @@ type Props = {
 
 export const RestaurantLists = (props: Props) => {
   const {
-    isRestaurantsDataFetching,
+    isSearchDataFetching,
+    isLocationDataPending,
     displayShops,
     totalRestaurants,
     setSelectedId,
@@ -48,26 +50,27 @@ export const RestaurantLists = (props: Props) => {
   return (
     <section className="col-span-4 md:col-span-12">
       {/* 一覧 */}
-      {!isRestaurantsDataFetching && displayShops?.length === 0 && (
-        <>
-          <div className="flex justify-between items-center mb-2">
-            <h3 className="font-headline-md text-headline-md text-on-background mb-md flex items-center gap-xs">
-              <span
-                className="material-symbols-outlined text-primary"
-                data-icon="star"
-                data-weight="fill"
-              >
-                <FaStar />
-              </span>
-              周辺のお店
-            </h3>
-            <p className="recent-search-icon-secondary">
-              {totalRestaurants !== 0 && `${totalRestaurants}件`}
-            </p>
-          </div>
-          <NoRestaurants />
-        </>
-      )}
+      {!(isLocationDataPending || isSearchDataFetching) &&
+        displayShops?.length === 0 && (
+          <>
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="font-headline-md text-headline-md text-on-background mb-md flex items-center gap-xs">
+                <span
+                  className="material-symbols-outlined text-primary"
+                  data-icon="star"
+                  data-weight="fill"
+                >
+                  <FaStar />
+                </span>
+                周辺のお店
+              </h3>
+              <p className="recent-search-icon-secondary">
+                {totalRestaurants !== 0 && `${totalRestaurants}件`}
+              </p>
+            </div>
+            <NoRestaurants />
+          </>
+        )}
       {displayShops?.map((shop) => {
         const code = shop.genre.code;
         const style = GENRE_STYLE[code as keyof typeof GENRE_STYLE] || {
