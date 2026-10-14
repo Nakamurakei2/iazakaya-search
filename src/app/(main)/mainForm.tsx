@@ -334,7 +334,7 @@ export default function IzakayaSearchApp(props: MainProps) {
           setSelectedGenres={setSelectedGenres}
           setIsAdvancedOpen={setIsAdvancedOpen}
         />
-        <RecentSearch scrollRef={scrollRef} />
+        {/* <RecentSearch scrollRef={scrollRef} /> */}
 
         <RestaurantLists
           isSearchDataFetching={isSearchDataFetching}
