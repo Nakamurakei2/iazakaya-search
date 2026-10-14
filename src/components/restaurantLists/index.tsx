@@ -22,6 +22,8 @@ export const RestaurantLists = (props: Props) => {
     locationNotice,
   } = props;
 
+  console.log("displayShops", displayShops?.length, totalRestaurants);
+
   /**
    * 詳細モーダル展開
    */
@@ -64,9 +66,11 @@ export const RestaurantLists = (props: Props) => {
                 </span>
                 周辺のお店
               </h3>
-              <p className="recent-search-icon-secondary">
-                {totalRestaurants !== 0 && `${totalRestaurants}件`}
-              </p>
+              {/* <p className="recent-search-icon-secondary">
+                {!(isLocationDataPending || isSearchDataFetching) &&
+                  displayShops?.length === 0 &&
+                  `${totalRestaurants}件`}
+              </p> */}
             </div>
             <NoRestaurants />
           </>

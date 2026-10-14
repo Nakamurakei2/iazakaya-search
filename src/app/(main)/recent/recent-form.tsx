@@ -259,7 +259,7 @@ export default function RecentForm(props: Props) {
           handlePaginateButtonClick={handlePaginateButtonClick}
         />
       ) : (
-        <div className="h-15"></div>
+        <div className="h-20"></div>
       )}
 
       {/* 詳細ダイアログ */}
