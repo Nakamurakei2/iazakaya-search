@@ -50,7 +50,7 @@ export const RestaurantLists = (props: Props) => {
   };
 
   return (
-    <section className="col-span-4 md:col-span-12">
+    <section className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
       {/* 一覧 */}
       {!(isLocationDataPending || isSearchDataFetching) &&
         displayShops?.length === 0 && (

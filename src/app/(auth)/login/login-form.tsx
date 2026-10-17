@@ -81,7 +81,7 @@ export default function LoginForm() {
 
           {/* Title */}
           <h1 className="mb-2 text-[28px] font-bold leading-9 text-[#e5e2e1] md:text-[40px] md:leading-12">
-            Izakaya Finder
+            Restaurant Finder
           </h1>
 
           <p className="text-[16px] leading-6 text-[#ddc1ae]">

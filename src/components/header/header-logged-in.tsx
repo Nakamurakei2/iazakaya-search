@@ -17,7 +17,7 @@ export function HeaderLoggedIn() {
           </span>
         </Link>
         <h1 className="font-headline-md text-headline-md font-bold text-primary">
-          Izakaya Finder
+          Restaurant Finder
         </h1>
       </div>
       <div className="flex items-center">

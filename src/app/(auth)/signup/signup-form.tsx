@@ -87,7 +87,7 @@ export default function SignupPage() {
           </h1>
 
           <p className="text-[16px] leading-6 text-[#ddc1ae]">
-            Join Izakaya Finder and discover the night.
+            Join Restaurant Finder and discover the night.
           </p>
         </div>
 
